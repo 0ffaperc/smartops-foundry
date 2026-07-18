@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartOps Foundry — Sign In</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e1a;--surface:#141c2e;--surface2:#1a2438;
+  --border:#1e293b;--border2:#334155;
+  --text:#e2e8f0;--text-mid:#94a3b8;--text-dim:#64748b;
+  --indigo:#6366f1;--indigo-light:#818cf8;--indigo-dark:#4f46e5;
+  --emerald:#10b981;--rose:#f43f5e;
+  --grad2:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);
+  --glow:0 0 40px rgba(99,102,241,0.3);
+}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden}
+body::before{content:'';position:absolute;top:-30%;left:50%;transform:translateX(-50%);width:900px;height:900px;background:radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 60%);border-radius:50%;pointer-events:none}
+body::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(99,102,241,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.03) 1px,transparent 1px);background-size:50px 50px;mask-image:radial-gradient(ellipse 60% 50% at 50% 50%,#000 0%,transparent 80%);-webkit-mask-image:radial-gradient(ellipse 60% 50% at 50% 50%,#000 0%,transparent 80%);pointer-events:none}
+.auth-card{position:relative;z-index:1;width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px 36px;box-shadow:0 12px 48px rgba(0,0,0,.4)}
+.auth-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:28px;text-decoration:none}
+.auth-logo .logo-icon{width:40px;height:40px;border-radius:12px;background:var(--grad2);display:flex;align-items:center;justify-content:center;box-shadow:var(--glow)}
+.auth-logo .logo-icon svg{width:22px;height:22px;color:#fff}
+.auth-logo span{font-size:18px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
+.auth-title{text-align:center;margin-bottom:28px}
+.auth-title h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+.auth-title p{font-size:14px;color:var(--text-mid)}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--text-mid);margin-bottom:6px}
+.input{width:100%;padding:12px 14px;font-size:14px;border:1.5px solid var(--border2);border-radius:10px;background:var(--surface2);color:var(--text);font-family:inherit;outline:none;transition:all .2s}
+.input:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+.input::placeholder{color:var(--text-dim)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:inherit;margin-top:6px}
+.btn-primary{background:var(--grad2);color:#fff;box-shadow:0 4px 16px rgba(79,70,229,.4)}
+.btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 28px rgba(79,70,229,.5)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.auth-switch{text-align:center;margin-top:24px;font-size:13px;color:var(--text-mid)}
+.auth-switch a{color:var(--indigo-light);font-weight:600;text-decoration:none;cursor:pointer}
+.auth-switch a:hover{text-decoration:underline}
+.auth-error{background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.2);color:var(--rose);padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:18px;display:none}
+.auth-error.show{display:block}
+.auth-success{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:var(--emerald);padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:18px;display:none}
+.auth-success.show{display:block}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.back-home{text-align:center;margin-top:20px;font-size:13px}
+.back-home a{color:var(--text-dim);text-decoration:none}
+.back-home a:hover{color:var(--text-mid)}
+.plan-badge{text-align:center;margin-bottom:20px}
+.plan-badge span{display:inline-block;padding:5px 14px;border-radius:999px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);font-size:12px;font-weight:600;color:var(--indigo-light)}
+</style>
+</head>
+<body>
+<div class="auth-card">
+  <a href="/" class="auth-logo" data-sof-logo data-sof-size="40" data-sof-variant="light" data-sof-animated="true">
+    <!-- Animated S logo mounts here -->
+  </a>
+
+  <div class="auth-title">
+    <h1 id="authTitle">Welcome Back</h1>
+    <p id="authSubtitle">Sign in to your dashboard</p>
+  </div>
+
+  <div class="plan-badge" id="planBadge" style="display:none">
+    <span id="planName"></span>
+  </div>
+
+  <div class="auth-error" id="authError"></div>
+  <div class="auth-success" id="authSuccess"></div>
+
+  <!-- Login Form -->
+  <form id="loginForm" onsubmit="return handleLogin(event)">
+    <div class="field">
+      <label>Email</label>
+      <input type="email" class="input" id="email" placeholder="you@business.com" required />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" class="input" id="password" placeholder="••••••••" required />
+    </div>
+    <button type="submit" class="btn btn-primary" id="loginBtn">
+      Sign In
+    </button>
+  </form>
+
+  <!-- Signup Form -->
+  <form id="signupForm" onsubmit="return handleSignup(event)" style="display:none">
+    <div class="field">
+      <label>Full Name</label>
+      <input type="text" class="input" id="signupName" placeholder="John Smith" required />
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" class="input" id="signupEmail" placeholder="you@business.com" required />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" class="input" id="signupPassword" placeholder="Min 8 characters" minlength="8" required />
+    </div>
+    <div class="field">
+      <label>Business Name</label>
+      <input type="text" class="input" id="signupBusiness" placeholder="Acme HVAC" required />
+    </div>
+    <button type="submit" class="btn btn-primary" id="signupBtn">
+      Create Account
+    </button>
+  </form>
+
+  <div class="auth-switch" id="authSwitch">
+    Don't have an account? <a onclick="toggleMode()">Sign up free</a>
+  </div>
+
+  <div class="back-home">
+    <a href="/">← Back to home</a>
+  </div>
+</div>
+
+<script src="/sof-logo.js"></script>
+<script>
+const API = '/api/auth';
+let mode = 'login';
+
+// Check URL params
+const params = new URLSearchParams(window.location.search);
+if (params.get('mode') === 'signup') toggleMode();
+const plan = params.get('plan');
+if (plan) {
+  document.getElementById('planBadge').style.display = 'block';
+  const planNames = { starter: 'Starter — $97/mo', pro: 'Professional — $297/mo', agency: 'Agency — $697/mo' };
+  document.getElementById('planName').textContent = planNames[plan] || plan;
+}
+
+// Check if already logged in
+const token = localStorage.getItem('sof_token');
+if (token && !params.get('mode')) {
+  window.location.href = '/agency.html';
+}
+
+function toggleMode() {
+  mode = mode === 'login' ? 'signup' : 'login';
+  const title = document.getElementById('authTitle');
+  const subtitle = document.getElementById('authSubtitle');
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  const switchText = document.getElementById('authSwitch');
+
+  if (mode === 'signup') {
+    title.textContent = 'Create Account';
+    subtitle.textContent = 'Start automating in minutes';
+    loginForm.style.display = 'none';
+    signupForm.style.display = 'block';
+    switchText.innerHTML = 'Already have an account? <a onclick="toggleMode()">Sign in</a>';
+  } else {
+    title.textContent = 'Welcome Back';
+    subtitle.textContent = 'Sign in to your dashboard';
+    loginForm.style.display = 'block';
+    signupForm.style.display = 'none';
+    switchText.innerHTML = 'Don\'t have an account? <a onclick="toggleMode()">Sign up free</a>';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+function showSuccess(msg) {
+  const el = document.getElementById('authSuccess');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Signing in...';
+
+  try {
+    const res = await fetch(`${API}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+      }),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      localStorage.setItem('sof_token', data.token);
+      localStorage.setItem('sof_user', JSON.stringify(data.user));
+      showSuccess('Welcome back! Redirecting...');
+      setTimeout(() => window.location.href = '/agency.html', 1000);
+    } else {
+      showError(data.error || 'Login failed');
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+  } catch (err) {
+    showError('Connection error. Please try again.');
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+  }
+  return false;
+}
+
+async function handleSignup(e) {
+  e.preventDefault();
+  const btn = document.getElementById('signupBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Creating account...';
+
+  try {
+    const res = await fetch(`${API}/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('signupName').value,
+        email: document.getElementById('signupEmail').value,
+        password: document.getElementById('signupPassword').value,
+        business: document.getElementById('signupBusiness').value,
+        plan: plan || 'starter',
+      }),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      localStorage.setItem('sof_token', data.token);
+      localStorage.setItem('sof_user', JSON.stringify(data.user));
+      showSuccess('Account created! Redirecting to dashboard...');
+      setTimeout(() => window.location.href = '/agency.html', 1500);
+    } else {
+      showError(data.error || 'Signup failed');
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+    }
+  } catch (err) {
+    showError('Connection error. Please try again.');
+    btn.disabled = false;
+    btn.textContent = 'Create Account';
+  }
+  return false;
+}
+</script>
+</body>
+</html>

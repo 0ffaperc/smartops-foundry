@@ -1,0 +1,352 @@
+import React, { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { v4 as uuidv4 } from 'uuid';
+import { format } from 'date-fns';
+import { useApp } from '../App';
+import GlowCard from '../components/GlowCard';
+import MetricCard from '../components/MetricCard';
+import {
+  Bot, BrainCircuit, Send, Sparkles, Target, ListTodo, Flame,
+  Wand2, Code2, CheckCircle2, AlertTriangle, Copy, Plus, ShieldCheck,
+} from 'lucide-react';
+import {
+  buildLifeOSContext,
+  buildOrchestratorSystemPrompt,
+  callOpenRouterChat,
+  localOrchestratorReply,
+} from '../lib/openRouter';
+
+function extractTasksFromText(text) {
+  if (!text) return [];
+  const lines = text.split('\n').map((line) => line.trim()).filter(Boolean);
+  return lines
+    .map((line) => {
+      const taskMatch = line.match(/^(?:[-*]\s*)?(?:\d+\.\s*)?(?:\[\s?\]\s*)?TASK:\s*(.+)$/i);
+      if (taskMatch) return taskMatch[1].trim();
+
+      const checkboxMatch = line.match(/^(?:[-*]\s*)?\[\s?\]\s+(.+)$/i);
+      if (checkboxMatch) return checkboxMatch[1].trim();
+
+      return null;
+    })
+    .filter(Boolean)
+    .slice(0, 12);
+}
+
+function MessageBubble({ message }) {
+  const isUser = message.role === 'user';
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+    >
+      <div className={`max-w-[90%] rounded-2xl px-4 py-3 border whitespace-pre-wrap text-sm leading-relaxed ${
+        isUser
+          ? 'bg-gold-500/12 border-gold-500/20 text-white'
+          : 'bg-surface-200/60 border-white/[0.05] text-white/75'
+      }`}>
+        <div className="text-[10px] uppercase tracking-wider text-white/25 mb-1">
+          {isUser ? 'You' : 'Orchestrator'} · {message.time}
+        </div>
+        {message.content}
+      </div>
+    </motion.div>
+  );
+}
+
+export default function Orchestrator() {
+  const {
+    goals, tasks, setTasks, habits, habitLogs, reviews, settings, today, setCurrentScreen,
+  } = useApp();
+
+  const [mode, setMode] = useState('coach');
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [messages, setMessages] = useState([
+    {
+      role: 'assistant',
+      content: 'I am the Orchestrator Agent. I sit above your planner, critic, reviews, tasks, habits, and goals. Ask me what to do next, or ask me for a site/app change and I will turn it into an implementation plan.',
+      time: new Date().toLocaleTimeString(),
+    },
+  ]);
+
+  const lifeContext = useMemo(() => buildLifeOSContext({ goals, tasks, habits, habitLogs, reviews, today }), [goals, tasks, habits, habitLogs, reviews, today]);
+
+  const activeGoals = goals.filter((g) => g.status === 'active');
+  const todayTasks = tasks.filter((t) => t.date === today);
+  const openTasks = tasks.filter((t) => t.status !== 'done' && t.status !== 'skipped');
+  const completedToday = todayTasks.filter((t) => t.status === 'done').length;
+  const activeHabits = habits.filter((h) => h.active);
+  const habitsDoneToday = habitLogs.filter((l) => l.date === today && l.completed).length;
+  const latestAssistant = [...messages].reverse().find((m) => m.role === 'assistant');
+  const extractableTasks = extractTasksFromText(latestAssistant?.content || '');
+
+  const model = settings.orchestratorModel || settings.premiumModel || 'anthropic/claude-sonnet-4.5';
+  const hasApiKey = Boolean(settings.apiKey?.trim());
+
+  const sendPrompt = async (promptText = input, forcedMode = mode) => {
+    const cleanPrompt = promptText.trim();
+    if (!cleanPrompt || loading) return;
+
+    setInput('');
+    setError('');
+    setLoading(true);
+
+    const userMessage = { role: 'user', content: cleanPrompt, time: new Date().toLocaleTimeString() };
+    setMessages((prev) => [...prev, userMessage]);
+
+    try {
+      let reply;
+
+      // Layer 1: the real Hermes agent (Perc Jr.) via the local backend on :8787.
+      // Full power — persistent memory, web, cron, subagents. Try this first.
+      try {
+        const res = await fetch('http://localhost:8787/api/orchestrator', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userMessage: cleanPrompt,
+            mode: forcedMode,
+            today,
+            appState: { goals, tasks, habits, habitLogs, reviews },
+          }),
+        });
+        if (!res.ok) throw new Error(`Backend ${res.status}`);
+        const data = await res.json();
+        if (!data?.reply) throw new Error('Empty backend reply');
+        reply = data.reply;
+      } catch (backendErr) {
+        // Layer 2: backend unavailable -> fall back to direct OpenRouter (if a key is set).
+        if (hasApiKey) {
+          const systemPrompt = buildOrchestratorSystemPrompt(lifeContext, forcedMode);
+          const history = messages.slice(-8).map((m) => ({ role: m.role, content: m.content }));
+          reply = await callOpenRouterChat({
+            apiKey: settings.apiKey,
+            model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              ...history,
+              { role: 'user', content: cleanPrompt },
+            ],
+          });
+        } else {
+          // Layer 3: no backend, no key -> local mock so the screen never dies.
+          reply = localOrchestratorReply(cleanPrompt, lifeContext, forcedMode);
+        }
+      }
+
+      setMessages((prev) => [...prev, {
+        role: 'assistant',
+        content: reply,
+        time: new Date().toLocaleTimeString(),
+      }]);
+    } catch (err) {
+      const message = err?.message || 'The Orchestrator failed to respond.';
+      setError(message);
+      setMessages((prev) => [...prev, {
+        role: 'assistant',
+        content: `Could not reach the Orchestrator: ${message}\n\nMake sure the LifeOS backend is running (orchestrator-server), or add an API key in Settings for direct mode.`,
+        time: new Date().toLocaleTimeString(),
+      }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const quickBrief = () => sendPrompt('Give me my daily command brief. Tell me the one main objective, the top 3 actions, what to avoid, and what task I should do first. Use TASK: lines for the actions.', 'coach');
+
+  const siteChange = () => {
+    setMode('site');
+    setInput('I want to improve this LifeOS app. Review my current goals/tasks and suggest the highest-leverage feature change. Give me exact file changes and TASK: lines to implement it.');
+  };
+
+  const copyLast = async () => {
+    if (!latestAssistant?.content) return;
+    await navigator.clipboard.writeText(latestAssistant.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  const createTasksFromLastReply = () => {
+    if (extractableTasks.length === 0) return;
+    const newTasks = extractableTasks.map((title, index) => ({
+      id: uuidv4(),
+      goalId: null,
+      title,
+      date: today,
+      priority: index < 3 ? 'high' : 'medium',
+      status: 'todo',
+      createdAt: format(new Date(), 'yyyy-MM-dd'),
+    }));
+    setTasks((prev) => [...prev, ...newTasks]);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl lg:text-4xl font-bold flex items-center gap-3">
+            <Bot className="w-8 h-8 text-gold-400" strokeWidth={1.5} />
+            Orchestrator Agent
+          </h1>
+          <p className="text-white/40 mt-1 text-sm">The command center above your goals, tasks, planner, reviews, and agents.</p>
+        </div>
+        <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium ${hasApiKey ? 'border-emerald-500/20 text-emerald-400 bg-emerald-500/8' : 'border-gold-500/20 text-gold-400 bg-gold-500/8'}`}>
+          <ShieldCheck className="w-3.5 h-3.5" strokeWidth={1.5} />
+          {hasApiKey ? `Claude/OpenRouter ready · ${model}` : 'Local fallback mode · add API key in Settings'}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <MetricCard label="Active Goals" value={activeGoals.length} subtitle="mission targets" icon={Target} color="gold" glow onClick={() => setCurrentScreen('goals')} />
+        <MetricCard label="Open Tasks" value={openTasks.length} subtitle={`${completedToday}/${todayTasks.length} done today`} icon={ListTodo} color="blue" glow onClick={() => setCurrentScreen('tasks')} />
+        <MetricCard label="Habits Today" value={`${habitsDoneToday}/${activeHabits.length}`} subtitle="logged / active" icon={Flame} color="emerald" glow onClick={() => setCurrentScreen('habits')} />
+        <MetricCard label="Agent Mode" value={mode === 'coach' ? 'Coach' : 'Site'} subtitle="switch below" icon={BrainCircuit} color="purple" glow />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <GlowCard glowColor="gold" className="min-h-[520px] flex flex-col">
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <button
+                onClick={() => setMode('coach')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${mode === 'coach' ? 'bg-gold-500/10 text-gold-400 border-gold-500/20' : 'bg-surface-200/40 text-white/30 border-white/[0.04] hover:text-white/50'}`}
+              >
+                Goal Coach
+              </button>
+              <button
+                onClick={() => setMode('site')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${mode === 'site' ? 'bg-accent-purple/15 text-accent-purple border-accent-purple/20' : 'bg-surface-200/40 text-white/30 border-white/[0.04] hover:text-white/50'}`}
+              >
+                Site Change Builder
+              </button>
+              <button onClick={quickBrief} disabled={loading} className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium hover:bg-emerald-500/15 transition-all disabled:opacity-50">
+                <Sparkles className="w-3.5 h-3.5" strokeWidth={1.5} /> Daily Brief
+              </button>
+              <button onClick={siteChange} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-accent-purple/10 border border-accent-purple/20 text-accent-purple text-xs font-medium hover:bg-accent-purple/15 transition-all">
+                <Code2 className="w-3.5 h-3.5" strokeWidth={1.5} /> App Upgrade
+              </button>
+            </div>
+
+            {error && (
+              <div className="mb-3 p-3 rounded-xl bg-rose-500/8 border border-rose-500/15 text-xs text-rose-300 flex gap-2">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
+                {error}
+              </div>
+            )}
+
+            <div className="flex-1 space-y-3 overflow-y-auto scrollable pr-1 pb-4">
+              {messages.map((message, index) => <MessageBubble key={`${message.time}-${index}`} message={message} />)}
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="rounded-2xl px-4 py-3 bg-surface-200/60 border border-white/[0.05] text-sm text-white/40 flex items-center gap-2">
+                    <Wand2 className="w-4 h-4 animate-pulse text-gold-400" strokeWidth={1.5} />
+                    Orchestrator thinking...
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-4 border-t border-white/[0.04]">
+              <div className="flex items-end gap-2">
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      sendPrompt();
+                    }
+                  }}
+                  placeholder={mode === 'coach' ? 'Ask: what should I do next to hit my goals?' : 'Ask: change my dashboard so it pushes my highest-priority goal harder...'}
+                  rows={3}
+                  className="flex-1 px-3.5 py-3 rounded-xl bg-surface-200/60 border border-white/[0.06] text-sm text-white placeholder:text-white/15 focus:border-gold-500/30 transition-all resize-none"
+                />
+                <button
+                  onClick={() => sendPrompt()}
+                  disabled={loading || !input.trim()}
+                  className="h-[70px] px-4 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-black font-semibold hover:from-gold-400 hover:to-gold-500 transition-all shadow-lg shadow-gold-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-4 h-4" strokeWidth={2} />
+                </button>
+              </div>
+            </div>
+          </GlowCard>
+        </div>
+
+        <div className="space-y-4">
+          <GlowCard glowColor="emerald">
+            <div className="flex items-center gap-2 mb-3">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" strokeWidth={1.5} />
+              <h2 className="text-sm font-semibold">Apply Output</h2>
+            </div>
+            <p className="text-xs text-white/40 leading-relaxed mb-3">
+              When the Orchestrator returns lines starting with TASK:, you can convert them into real LifeOS tasks.
+            </p>
+            <button
+              onClick={createTasksFromLastReply}
+              disabled={extractableTasks.length === 0}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium hover:bg-emerald-500/15 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Plus className="w-4 h-4" strokeWidth={1.5} />
+              Create {extractableTasks.length || 0} Tasks
+            </button>
+            <button
+              onClick={copyLast}
+              disabled={!latestAssistant?.content}
+              className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface-200/50 border border-white/[0.06] text-white/50 text-sm font-medium hover:text-white/70 transition-all disabled:opacity-40"
+            >
+              <Copy className="w-4 h-4" strokeWidth={1.5} />
+              {copied ? 'Copied' : 'Copy Last Reply'}
+            </button>
+          </GlowCard>
+
+          <GlowCard glowColor="blue">
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="w-4 h-4 text-blue-400" strokeWidth={1.5} />
+              <h2 className="text-sm font-semibold">Mission Context</h2>
+            </div>
+            <div className="space-y-3 text-xs">
+              <div>
+                <p className="text-white/25 uppercase tracking-wider mb-1">Top active goals</p>
+                <div className="space-y-1.5">
+                  {activeGoals.slice(0, 5).map((g) => (
+                    <div key={g.id} className="p-2 rounded-lg bg-surface-200/40 border border-white/[0.03]">
+                      <span className="text-gold-400/70 uppercase text-[9px]">{g.level}</span>
+                      <p className="text-white/60 truncate">{g.title}</p>
+                    </div>
+                  ))}
+                  {activeGoals.length === 0 && <p className="text-white/25 italic">No active goals.</p>}
+                </div>
+              </div>
+              <div>
+                <p className="text-white/25 uppercase tracking-wider mb-1">Highest-priority open tasks</p>
+                <div className="space-y-1.5">
+                  {openTasks.filter((t) => t.priority === 'high').slice(0, 5).map((t) => (
+                    <div key={t.id} className="p-2 rounded-lg bg-surface-200/40 border border-white/[0.03] text-white/55 truncate">
+                      {t.title}
+                    </div>
+                  ))}
+                  {openTasks.filter((t) => t.priority === 'high').length === 0 && <p className="text-white/25 italic">No high-priority open tasks.</p>}
+                </div>
+              </div>
+            </div>
+          </GlowCard>
+
+          <GlowCard glowColor="rose">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-4 h-4 text-gold-400" strokeWidth={1.5} />
+              <h2 className="text-sm font-semibold">Reality Check</h2>
+            </div>
+            <p className="text-xs text-white/40 leading-relaxed">
+              The Orchestrator can call OpenRouter/Claude and create LifeOS tasks. It cannot safely rewrite source files from inside the UI yet. For true one-click code edits, the next upgrade is a secure Electron file-patching bridge.
+            </p>
+          </GlowCard>
+        </div>
+      </div>
+    </div>
+  );
+}

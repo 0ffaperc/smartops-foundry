@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:*; img-src 'self' data:;" />
+    <title>LifeOS V2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <style>
+      html, body, #root {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #08080f;
+        color: #f1f1f6;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      body {
+        overflow-y: auto;
+      }
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.15);
+      }
+      ::selection {
+        background: rgba(245, 158, 11, 0.3);
+        color: #f1f1f6;
+      }
+    </style>
+  <script id="lifeos-hard-openrouter-bridge">
+(function () {
+  const BRAIN_URL = "http://127.0.0.1:8799/api/openrouter/chat/completions";
+  const originalFetch = window.fetch.bind(window);
+
+  window.fetch = function(input, init) {
+    let url = "";
+    try {
+      url = typeof input === "string" ? input : input && input.url ? input.url : "";
+    } catch {}
+
+    if (
+      url.includes("openrouter.ai") ||
+      url.includes("/api/v1/chat/completions") ||
+      url.includes("127.0.0.1:8787/api/openrouter/chat/completions") ||
+      url.includes("127.0.0.1:8799/api/openrouter/chat/completions")
+    ) {
+      const body = init && init.body ? init.body : JSON.stringify({
+        messages: [{ role: "user", content: "Hello" }],
+        max_tokens: 300
+      });
+
+      return originalFetch(BRAIN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body
+      });
+    }
+
+    return originalFetch(input, init);
+  };
+
+  console.log("[LifeOS] Hard OpenRouter bridge active -> " + BRAIN_URL);
+})();
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+

@@ -1,0 +1,41 @@
+node_modules/
+dist/
+release/
+.env
+.DS_Store
+
+# Secrets & keys
+friend-secret.txt
+*.pem
+.cloudflared/
+
+# Logs
+*.log
+server.log
+
+# Agency data (client info, user sessions)
+agency-data/
+
+# Cache & temp
+cache/
+.cache/
+*.tmp
+
+# OS files
+Thumbs.db
+desktop.ini
+
+# Fix scripts (one-time use)
+fix-secret.py
+test-bridge.sh
+
+# Clip builder output
+clip-builder/output/
+clip-builder/clips/
+
+# Trading data
+public/v3data/
+
+# Image cache
+image_cache/
+audio_cache/

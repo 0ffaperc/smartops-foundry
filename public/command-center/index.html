@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Command Center — AI Ops Agency</title>
+  <link rel="stylesheet" href="command-center.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <!-- ===== Sidebar ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>⚡ AI Ops Command Center</h1>
+      <p>Sir Perc's Agency Dashboard</p>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" data-page="agency" onclick="showPage('agency')">
+        <span class="icon">📊</span> Agency Overview
+      </div>
+      <div class="nav-item" data-page="clients" onclick="showPage('clients')">
+        <span class="icon">🏢</span> Client Overview
+      </div>
+      <div class="nav-item" data-page="chat" onclick="showPage('chat')">
+        <span class="icon">💬</span> Chat with Hermes
+        <span class="nav-badge">AI</span>
+      </div>
+      <div class="nav-item" data-page="tasks" onclick="showPage('tasks')">
+        <span class="icon">✅</span> Tasks & Jobs
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="avatar-dot">SP</div>
+      <div class="info">
+        <div class="name">Sir Perc</div>
+        <div class="role">Agency Director</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== Main ===== -->
+  <main class="main">
+    <!-- Agency Overview -->
+    <div class="page active" id="page-agency">
+      <div class="page-header">
+        <div>
+          <h2>Agency Overview</h2>
+          <p>Real-time performance across all clients</p>
+        </div>
+      </div>
+      <div class="stats-grid" id="agency-stats"></div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Monthly Revenue Trend</h3>
+          <div class="chart-canvas-wrap"><canvas id="chart-revenue"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Client Distribution</h3>
+          <div class="chart-canvas-wrap"><canvas id="chart-clients"></canvas></div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Jobs Completed (Last 14 Days)</h3>
+          <div class="chart-canvas-wrap"><canvas id="chart-jobs"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Automation Activity</h3>
+          <div class="chart-canvas-wrap"><canvas id="chart-automations"></canvas></div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="section-header"><h3>Active Clients</h3></div>
+        <table class="data-table" id="agency-client-table">
+          <thead><tr><th>Client</th><th>Niche</th><th>Plan</th><th>Revenue</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Client Overview -->
+    <div class="page" id="page-clients">
+      <div class="page-header">
+        <div>
+          <h2>Client Overview</h2>
+          <p>Select a client to view their dashboard</p>
+        </div>
+        <select id="client-selector" onchange="loadClientDashboard(this.value)" class="chat-input" style="width:220px;padding:8px 12px;">
+        </select>
+      </div>
+      <div class="stats-grid" id="client-stats"></div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Client Revenue & Goal Progress</h3>
+          <div class="chart-canvas-wrap"><canvas id="chart-client-rev"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Service Breakdown</h3>
+          <div class="chart-canvas-wrap"><canvas id="chart-client-services"></canvas></div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Long-Term Goals Progress</h3>
+          <div id="client-goals"></div>
+        </div>
+        <div class="chart-card">
+          <h3>Daily Tasks</h3>
+          <div class="task-list" id="client-tasks"></div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="section-header"><h3>Recent Jobs</h3></div>
+        <table class="data-table" id="client-jobs-table">
+          <thead><tr><th>Job</th><th>Type</th><th>Date</th><th>Status</th><th>Value</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="page" id="page-chat">
+      <div class="page-header">
+        <div>
+          <h2>Chat with Hermes</h2>
+          <p>Full AI agent — tools, memory, skills — powered by GLM 5.2</p>
+        </div>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-msg assistant">
+            <div class="avatar">⚡</div>
+            <div class="bubble">Hey Sir Perc! I'm Hermes running in a separate web session. I have full access to your tools, memory, and skills. Ask me anything — research, code, agency ops, trading, clips — I'm fully operational here in parallel with Telegram.</div>
+          </div>
+        </div>
+        <div class="chat-input-wrap">
+          <input type="text" class="chat-input" id="chat-input" placeholder="Message Hermes..." onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="chat-send" id="chat-send" onclick="sendChat()">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tasks & Jobs -->
+    <div class="page" id="page-tasks">
+      <div class="page-header">
+        <div><h2>Tasks & Jobs</h2><p>All active tasks across clients</p></div>
+      </div>
+      <div class="data-card">
+        <div class="section-header"><h3>All Active Tasks</h3></div>
+        <div class="task-list" id="all-tasks"></div>
+      </div>
+      <div class="data-card">
+        <div class="section-header"><h3>Recent Completed Jobs</h3></div>
+        <table class="data-table" id="all-jobs-table">
+          <thead><tr><th>Client</th><th>Job</th><th>Type</th><th>Date</th><th>Status</th><th>Value</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="command-center.js"></script>
+<script src="chat.js"></script>
+</body>
+</html>

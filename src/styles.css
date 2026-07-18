@@ -1,0 +1,184 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-surface-300/30;
+  }
+  body {
+    @apply bg-surface text-white antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+  input, textarea, select {
+    @apply outline-none;
+  }
+
+  /* ===== FIX: readable dropdowns everywhere ===== */
+  select {
+    background-color: #1a1a20;
+    color: rgba(255, 255, 255, 0.88);
+  }
+  select option {
+    background-color: #1a1a20;
+    color: rgba(255, 255, 255, 0.88);
+    padding: 10px 14px;
+  }
+  select optgroup {
+    background-color: #131318;
+    color: rgba(245, 158, 11, 0.75);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 11px;
+  }
+}
+
+@layer components {
+  .glow-border {
+    position: relative;
+  }
+  .glow-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.05), rgba(255,255,255,0.05));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .glass-panel {
+    @apply bg-surface-100/60 backdrop-blur-xl border border-white/[0.04];
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-gold-400 to-gold-200;
+  }
+  .text-gradient-emerald {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-emerald-300;
+  }
+
+  .scrollable {
+    @apply overflow-y-auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.08) transparent;
+  }
+  .scrollable::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollable::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; }
+  .scrollable::-webkit-scrollbar-track { background: transparent; }
+
+  /* ===== Inputs — solid dark, readable, focus glow ===== */
+  .modal-input {
+    @apply w-full bg-[#131318] border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white/90 outline-none transition-all duration-200;
+  }
+  .modal-input::placeholder { @apply text-white/30; }
+  .modal-input:focus {
+    @apply border-gold-400/50 bg-[#16161c];
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.10);
+  }
+
+  /* ===== Custom select arrow + readable dropdown ===== */
+  select.modal-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #131318;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a8a96' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    padding-right: 2.75rem;
+    cursor: pointer;
+  }
+  select.modal-input:hover { @apply border-white/20; }
+  select.modal-input option { background-color: #131318; color: rgba(255,255,255,0.9); }
+  select.modal-input optgroup { background-color: #0f0f14; color: rgba(245,158,11,0.8); }
+
+  /* ===== Primary button — gold glow on hover ===== */
+  .modal-btn-primary {
+    @apply w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gold-500/15 text-gold-400 hover:bg-gold-500/25 border border-gold-500/20 text-sm font-medium transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .modal-btn-primary:hover:not(:disabled) {
+    box-shadow: 0 0 22px rgba(245,158,11,0.30), 0 0 44px rgba(245,158,11,0.12);
+    transform: translateY(-1px);
+  }
+  .modal-btn-primary:active:not(:disabled) { transform: translateY(0); }
+}
+
+@layer utilities {
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* ===== Hover glow system — buttons light up on hover ===== */
+  .glow-gold {
+    transition: box-shadow 0.25s ease, background-color 0.2s ease, transform 0.15s ease;
+  }
+  .glow-gold:hover:not(:disabled) {
+    box-shadow: 0 0 22px rgba(245,158,11,0.35), 0 0 44px rgba(245,158,11,0.14);
+    transform: translateY(-1px);
+  }
+  .glow-sky {
+    transition: box-shadow 0.25s ease, background-color 0.2s ease, transform 0.15s ease;
+  }
+  .glow-sky:hover:not(:disabled) {
+    box-shadow: 0 0 22px rgba(56,189,248,0.35), 0 0 44px rgba(56,189,248,0.14);
+    transform: translateY(-1px);
+  }
+  .glow-violet {
+    transition: box-shadow 0.25s ease, background-color 0.2s ease, transform 0.15s ease;
+  }
+  .glow-violet:hover:not(:disabled) {
+    box-shadow: 0 0 22px rgba(167,139,250,0.35), 0 0 44px rgba(167,139,250,0.14);
+    transform: translateY(-1px);
+  }
+  .glow-emerald {
+    transition: box-shadow 0.25s ease, background-color 0.2s ease, transform 0.15s ease;
+  }
+  .glow-emerald:hover:not(:disabled) {
+    box-shadow: 0 0 22px rgba(52,211,153,0.35), 0 0 44px rgba(52,211,153,0.14);
+    transform: translateY(-1px);
+  }
+  .glow-rose {
+    transition: box-shadow 0.25s ease, background-color 0.2s ease, transform 0.15s ease;
+  }
+  .glow-rose:hover:not(:disabled) {
+    box-shadow: 0 0 22px rgba(244,63,94,0.35), 0 0 44px rgba(244,63,94,0.14);
+    transform: translateY(-1px);
+  }
+
+  /* ===== Card hover lift ===== */
+  .agency-card {
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .agency-card:hover {
+    background-color: rgba(255,255,255,0.045);
+    border-color: rgba(255,255,255,0.13);
+    transform: translateY(-2px);
+  }
+
+  /* ===== Active tab glow underline ===== */
+  .tab-active {
+    position: relative;
+  }
+  .tab-active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 12%;
+    right: 12%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(245,158,11,0.8), transparent);
+    border-radius: 999px;
+    box-shadow: 0 0 12px rgba(245,158,11,0.5);
+  }
+}
