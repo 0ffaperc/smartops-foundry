@@ -6,55 +6,52 @@
 <title>SmartOps Foundry — Sign In</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#06080f;--surface:rgba(255,255,255,.03);--surface2:rgba(255,255,255,.05);
-  --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.1);
-  --text:#f0f4f8;--text-mid:#8b95a7;--text-dim:#5a6478;
-  --blue:#3b82f6;--blue-light:#60a5fa;--emerald:#10b981;--rose:#f43f5e;
-  --grad:linear-gradient(135deg,#3b82f6 0%,#06b6d4 100%);
-  --glow:0 0 60px rgba(59,130,246,.15);
+  --bg:#08090a;--bg-panel:#0f1011;
+  --surface:rgba(255,255,255,.02);--surface2:rgba(255,255,255,.04);
+  --border:rgba(255,255,255,.05);--border2:rgba(255,255,255,.08);
+  --text:#f7f8f8;--text-2:#d0d6e0;--text-3:#8a8f98;--text-4:#62666d;
+  --accent:#5e6ad2;--accent-hover:#828fff;
+  --emerald:#10b981;--rose:#f43f5e;
 }
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden}
-body::before{content:'';position:absolute;top:-20%;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(circle,rgba(59,130,246,.06) 0%,transparent 60%);border-radius:50%;pointer-events:none}
-body::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(59,130,246,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.03) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 50% 40% at 50% 50%,#000 0%,transparent 80%);-webkit-mask-image:radial-gradient(ellipse 50% 40% at 50% 50%,#000 0%,transparent 80%);pointer-events:none}
-.auth-card{position:relative;z-index:1;width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 36px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-.auth-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:28px;text-decoration:none}
-.auth-logo span{font-size:16px;font-weight:700;letter-spacing:-.02em;color:var(--text)}
-.auth-title{text-align:center;margin-bottom:28px}
-.auth-title h1{font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
-.auth-title p{font-size:13px;color:var(--text-mid)}
-.field{margin-bottom:16px}
-.field label{display:block;font-size:12px;font-weight:600;color:var(--text-mid);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
-.input{width:100%;padding:11px 14px;font-size:14px;border:1px solid var(--border2);border-radius:10px;background:rgba(0,0,0,.2);color:var(--text);font-family:inherit;outline:none;transition:all .2s}
-.input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
-.input::placeholder{color:var(--text-dim)}
-.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:inherit;margin-top:6px}
-.btn-primary{background:var(--grad);color:#fff;box-shadow:0 0 0 1px rgba(59,130,246,.3),0 4px 20px rgba(59,130,246,.25)}
-.btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 0 0 1px rgba(59,130,246,.5),0 8px 30px rgba(59,130,246,.35)}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed}
-.auth-switch{text-align:center;margin-top:24px;font-size:13px;color:var(--text-mid)}
-.auth-switch a{color:var(--blue-light);font-weight:600;text-decoration:none;cursor:pointer}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;-webkit-font-smoothing:antialiased;font-feature-settings:"cv01","ss03"}
+body::before{content:'';position:absolute;top:-10%;left:35%;width:500px;height:500px;background:radial-gradient(circle,rgba(94,106,210,.05) 0%,transparent 60%);border-radius:50%;pointer-events:none}
+.auth-card{position:relative;z-index:1;width:100%;max-width:380px}
+.auth-logo{display:flex;align-items:center;justify-content:center;margin-bottom:32px}
+.auth-title{margin-bottom:28px}
+.auth-title h1{font-size:22px;font-weight:510;letter-spacing:-.02em;margin-bottom:6px;text-align:center}
+.auth-title p{font-size:13px;color:var(--text-3);text-align:center}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--text-3);margin-bottom:6px;letter-spacing:-.01em}
+.input{width:100%;padding:10px 13px;font-size:13px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);font-family:inherit;outline:none;transition:all .15s}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(94,106,210,.1);background:var(--surface2)}
+.input::placeholder{color:var(--text-4)}
+.btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:inherit;margin-top:8px}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover:not(:disabled){background:var(--accent-hover)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.auth-switch{text-align:center;margin-top:22px;font-size:13px;color:var(--text-3)}
+.auth-switch a{color:var(--accent-hover);font-weight:500;cursor:pointer}
 .auth-switch a:hover{text-decoration:underline}
-.auth-error{background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.15);color:var(--rose);padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;display:none}
+.auth-error{background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.12);color:var(--rose);padding:10px 13px;border-radius:6px;font-size:12px;margin-bottom:14px;display:none}
 .auth-error.show{display:block}
-.auth-success{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.15);color:var(--emerald);padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;display:none}
+.auth-success{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.12);color:var(--emerald);padding:10px 13px;border-radius:6px;font-size:12px;margin-bottom:14px;display:none}
 .auth-success.show{display:block}
-.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.back-home{text-align:center;margin-top:20px;font-size:13px}
-.back-home a{color:var(--text-dim);text-decoration:none}.back-home a:hover{color:var(--text-mid)}
+.back-home{text-align:center;margin-top:18px;font-size:12px}
+.back-home a{color:var(--text-4);text-decoration:none}.back-home a:hover{color:var(--text-3)}
 .plan-badge{text-align:center;margin-bottom:20px}
-.plan-badge span{display:inline-block;padding:4px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--border2);font-size:11px;font-weight:600;color:var(--blue-light);text-transform:uppercase;letter-spacing:.05em}
+.plan-badge span{display:inline-block;padding:3px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--border2);font-size:11px;font-weight:500;color:var(--accent-hover)}
 </style>
 </head>
 <body>
 <div class="auth-card">
-  <a href="/" class="auth-logo" data-sof-logo data-sof-size="36" data-sof-variant="light" data-sof-animated="true"></a>
+  <div class="auth-logo" data-sof-logo data-sof-size="32" data-sof-variant="light" data-sof-animated="true"></div>
   <div class="auth-title">
-    <h1 id="authTitle">Welcome Back</h1>
+    <h1 id="authTitle">Welcome back</h1>
     <p id="authSubtitle">Sign in to your dashboard</p>
   </div>
   <div class="plan-badge" id="planBadge" style="display:none"><span id="planName"></span></div>
@@ -63,14 +60,14 @@ body::after{content:'';position:absolute;inset:0;background-image:linear-gradien
   <form id="loginForm" onsubmit="return handleLogin(event)">
     <div class="field"><label>Email</label><input type="email" class="input" id="email" placeholder="you@business.com" required /></div>
     <div class="field"><label>Password</label><input type="password" class="input" id="password" placeholder="••••••••" required /></div>
-    <button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button>
+    <button type="submit" class="btn btn-primary" id="loginBtn">Sign in</button>
   </form>
   <form id="signupForm" onsubmit="return handleSignup(event)" style="display:none">
     <div class="field"><label>Full Name</label><input type="text" class="input" id="signupName" placeholder="John Smith" required /></div>
     <div class="field"><label>Email</label><input type="email" class="input" id="signupEmail" placeholder="you@business.com" required /></div>
     <div class="field"><label>Password</label><input type="password" class="input" id="signupPassword" placeholder="Min 8 characters" minlength="8" required /></div>
     <div class="field"><label>Business Name</label><input type="text" class="input" id="signupBusiness" placeholder="Acme HVAC" required /></div>
-    <button type="submit" class="btn btn-primary" id="signupBtn">Create Account</button>
+    <button type="submit" class="btn btn-primary" id="signupBtn">Create account</button>
   </form>
   <div class="auth-switch" id="authSwitch">Don't have an account? <a onclick="toggleMode()">Sign up free</a></div>
   <div class="back-home"><a href="/">← Back to home</a></div>
@@ -84,11 +81,11 @@ const plan=params.get('plan');
 if(plan){document.getElementById('planBadge').style.display='block';const pn={starter:'Starter — $97/mo',pro:'Professional — $297/mo',agency:'Agency — $697/mo'};document.getElementById('planName').textContent=pn[plan]||plan;}
 const token=localStorage.getItem('sof_token');
 if(token&&!params.get('mode'))window.location.href='/agency.html';
-function toggleMode(){mode=mode==='login'?'signup':'login';const t=document.getElementById('authTitle'),s=document.getElementById('authSubtitle'),l=document.getElementById('loginForm'),f=document.getElementById('signupForm'),w=document.getElementById('authSwitch');if(mode==='signup'){t.textContent='Create Account';s.textContent='Start automating in minutes';l.style.display='none';f.style.display='block';w.innerHTML='Already have an account? <a onclick="toggleMode()">Sign in</a>';}else{t.textContent='Welcome Back';s.textContent='Sign in to your dashboard';l.style.display='block';f.style.display='none';w.innerHTML='Don\'t have an account? <a onclick="toggleMode()">Sign up free</a>';}}
+function toggleMode(){mode=mode==='login'?'signup':'login';const t=document.getElementById('authTitle'),s=document.getElementById('authSubtitle'),l=document.getElementById('loginForm'),f=document.getElementById('signupForm'),w=document.getElementById('authSwitch');if(mode==='signup'){t.textContent='Create account';s.textContent='Start automating in minutes';l.style.display='none';f.style.display='block';w.innerHTML='Already have an account? <a onclick="toggleMode()">Sign in</a>';}else{t.textContent='Welcome back';s.textContent='Sign in to your dashboard';l.style.display='block';f.style.display='none';w.innerHTML="Don't have an account? <a onclick=\"toggleMode()\">Sign up free</a>";}}
 function showError(msg){const el=document.getElementById('authError');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),4000);}
 function showSuccess(msg){const el=document.getElementById('authSuccess');el.textContent=msg;el.classList.add('show');}
-async function handleLogin(e){e.preventDefault();const btn=document.getElementById('loginBtn');btn.disabled=true;btn.innerHTML='<div class="spinner"></div> Signing in...';try{const res=await fetch(`${API}/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('password').value})});const data=await res.json();if(data.ok){localStorage.setItem('sof_token',data.token);localStorage.setItem('sof_user',JSON.stringify(data.user));showSuccess('Welcome back! Redirecting...');setTimeout(()=>window.location.href='/agency.html',1000);}else{showError(data.error||'Login failed');btn.disabled=false;btn.textContent='Sign In';}}catch(err){showError('Connection error. Please try again.');btn.disabled=false;btn.textContent='Sign In';}return false;}
-async function handleSignup(e){e.preventDefault();const btn=document.getElementById('signupBtn');btn.disabled=true;btn.innerHTML='<div class="spinner"></div> Creating account...';try{const res=await fetch(`${API}/signup`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('signupName').value,email:document.getElementById('signupEmail').value,password:document.getElementById('signupPassword').value,business:document.getElementById('signupBusiness').value,plan:plan||'starter'})});const data=await res.json();if(data.ok){localStorage.setItem('sof_token',data.token);localStorage.setItem('sof_user',JSON.stringify(data.user));showSuccess('Account created! Redirecting...');setTimeout(()=>window.location.href='/agency.html',1500);}else{showError(data.error||'Signup failed');btn.disabled=false;btn.textContent='Create Account';}}catch(err){showError('Connection error. Please try again.');btn.disabled=false;btn.textContent='Create Account';}return false;}
+async function handleLogin(e){e.preventDefault();const btn=document.getElementById('loginBtn');btn.disabled=true;btn.innerHTML='<div class="spinner"></div> Signing in...';try{const res=await fetch(`${API}/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('password').value})});const data=await res.json();if(data.ok){localStorage.setItem('sof_token',data.token);localStorage.setItem('sof_user',JSON.stringify(data.user));showSuccess('Welcome back! Redirecting...');setTimeout(()=>window.location.href='/agency.html',1000);}else{showError(data.error||'Login failed');btn.disabled=false;btn.textContent='Sign in';}}catch(err){showError('Connection error. Please try again.');btn.disabled=false;btn.textContent='Sign in';}return false;}
+async function handleSignup(e){e.preventDefault();const btn=document.getElementById('signupBtn');btn.disabled=true;btn.innerHTML='<div class="spinner"></div> Creating account...';try{const res=await fetch(`${API}/signup`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('signupName').value,email:document.getElementById('signupEmail').value,password:document.getElementById('signupPassword').value,business:document.getElementById('signupBusiness').value,plan:plan||'starter'})});const data=await res.json();if(data.ok){localStorage.setItem('sof_token',data.token);localStorage.setItem('sof_user',JSON.stringify(data.user));showSuccess('Account created! Redirecting...');setTimeout(()=>window.location.href='/agency.html',1500);}else{showError(data.error||'Signup failed');btn.disabled=false;btn.textContent='Create account';}}catch(err){showError('Connection error. Please try again.');btn.disabled=false;btn.textContent='Create account';}return false;}
 </script>
 </body>
 </html>

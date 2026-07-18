@@ -7,145 +7,132 @@
 <meta name="description" content="AI-powered automation that captures every lead, follows up automatically, and books appointments — all approved by you before sending." />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#06080f;--bg2:#0a0e1a;--surface:rgba(255,255,255,.03);--surface2:rgba(255,255,255,.05);
-  --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.1);
-  --text:#f0f4f8;--text-mid:#8b95a7;--text-dim:#5a6478;
-  --blue:#3b82f6;--blue-light:#60a5fa;--cyan:#06b6d4;--cyan-light:#22d3ee;
-  --emerald:#10b981;--amber:#f59e0b;
-  --grad:linear-gradient(135deg,#3b82f6 0%,#06b6d4 100%);
-  --grad-text:linear-gradient(135deg,#60a5fa 0%,#22d3ee 100%);
-  --glow:0 0 60px rgba(59,130,246,.15);
+  --bg:#08090a;--bg-panel:#0f1011;--bg-elevated:#191a1b;
+  --surface:rgba(255,255,255,.02);--surface2:rgba(255,255,255,.04);--surface3:rgba(255,255,255,.05);
+  --border:rgba(255,255,255,.05);--border2:rgba(255,255,255,.08);
+  --text:#f7f8f8;--text-2:#d0d6e0;--text-3:#8a8f98;--text-4:#62666d;
+  --accent:#5e6ad2;--accent-light:#7170ff;--accent-hover:#828fff;
+  --green:#27a644;--emerald:#10b981;
 }
 html{scroll-behavior:smooth}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.5}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
-::selection{background:rgba(59,130,246,.3);color:#fff}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.5;font-feature-settings:"cv01","ss03"}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:3px}
+::selection{background:rgba(94,106,210,.3);color:#fff}
 a{color:inherit;text-decoration:none}
 
-/* ===== Shared ===== */
-.container{max-width:1080px;margin:0 auto;padding:0 24px}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:inherit;white-space:nowrap}
-.btn-ghost{background:transparent;color:var(--text-mid)}.btn-ghost:hover{color:var(--text)}
-.btn-primary{background:var(--grad);color:#fff;box-shadow:0 0 0 1px rgba(59,130,246,.3),0 4px 20px rgba(59,130,246,.25)}.btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 0 1px rgba(59,130,246,.5),0 8px 30px rgba(59,130,246,.35)}
-.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border2)}.btn-outline:hover{border-color:rgba(255,255,255,.2);background:var(--surface)}
-.btn-lg{padding:12px 24px;font-size:14px}
+/* Shared */
+.wrap{max-width:1140px;margin:0 auto;padding:0 24px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:inherit;white-space:nowrap;letter-spacing:-.01em}
+.btn-ghost{background:rgba(255,255,255,.02);color:var(--text-2);border:1px solid rgba(36,40,44,1)}.btn-ghost:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent-hover)}
+.btn-lg{padding:10px 20px;font-size:14px}
 
-/* ===== Nav ===== */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;transition:all .3s;padding:16px 0}
-.nav.scrolled{background:rgba(6,8,15,.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:12px 0}
-.nav-inner{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}
-.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:-.02em}
+/* Nav */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;transition:all .25s;padding:14px 0}
+.nav.scrolled{background:rgba(8,9,10,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:10px 0}
+.nav-inner{max-width:1140px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:9px;font-weight:500;font-size:15px;letter-spacing:-.02em}
 .nav-links{display:flex;align-items:center;gap:28px}
-.nav-links a{font-size:13px;font-weight:500;color:var(--text-mid);transition:color .2s}.nav-links a:hover{color:var(--text)}
-.nav-cta{display:flex;align-items:center;gap:8px}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text-3);transition:color .15s}.nav-links a:hover{color:var(--text)}
+.nav-cta{display:flex;align-items:center;gap:6px}
 
-/* ===== Hero ===== */
-.hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;padding:120px 24px 80px}
-.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(59,130,246,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.04) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 70% 50% at 50% 40%,#000 0%,transparent 80%);-webkit-mask-image:radial-gradient(ellipse 70% 50% at 50% 40%,#000 0%,transparent 80%)}
-.hero-glow{position:absolute;top:10%;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(59,130,246,.08) 0%,transparent 60%);border-radius:50%;pointer-events:none}
-.hero-content{position:relative;z-index:1;max-width:860px}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--border2);font-size:12px;font-weight:500;color:var(--text-mid);margin-bottom:32px}
-.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--emerald);box-shadow:0 0 8px var(--emerald)}
-.hero h1{font-size:clamp(38px,6.5vw,72px);font-weight:800;letter-spacing:-.035em;line-height:1.05;margin-bottom:24px}
-.hero h1 .grad{background:var(--grad-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.hero p.sub{font-size:clamp(16px,2.5vw,20px);color:var(--text-mid);max-width:580px;margin:0 auto 40px;line-height:1.6;font-weight:400}
-.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.hero-stats{display:flex;gap:56px;justify-content:center;margin-top:72px;flex-wrap:wrap}
-.stat{text-align:center}
-.stat .num{font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
-.stat .label{font-size:12px;color:var(--text-dim);font-weight:500;margin-top:4px;text-transform:uppercase;letter-spacing:.05em}
+/* Hero — left-aligned, asymmetric */
+.hero{position:relative;min-height:92vh;display:flex;align-items:center;overflow:hidden;padding:140px 0 80px}
+.hero-glow{position:absolute;top:0;left:25%;width:500px;height:500px;background:radial-gradient(circle,rgba(94,106,210,.06) 0%,transparent 65%);border-radius:50%;pointer-events:none}
+.hero-content{position:relative;z-index:1;max-width:720px}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;padding:4px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--border2);font-size:12px;font-weight:500;color:var(--text-3);margin-bottom:28px}
+.hero-badge .dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.hero h1{font-size:clamp(36px,5.5vw,64px);font-weight:510;letter-spacing:-.035em;line-height:1.02;margin-bottom:20px}
+.hero h1 .accent{color:var(--accent-light)}
+.hero p.sub{font-size:18px;color:var(--text-3);max-width:540px;line-height:1.6;font-weight:400;margin-bottom:36px}
+.hero-cta{display:flex;gap:10px;flex-wrap:wrap}
+.hero-meta{display:flex;gap:40px;margin-top:56px;flex-wrap:wrap}
+.meta-item .num{font-size:28px;font-weight:510;letter-spacing:-.02em;color:var(--text)}
+.meta-item .label{font-size:12px;color:var(--text-4);font-weight:500;margin-top:2px}
 
-/* ===== Sections ===== */
-.section{padding:100px 0;position:relative}
-.section-head{text-align:center;margin-bottom:56px}
-.section-tag{display:inline-block;font-size:12px;font-weight:600;color:var(--blue-light);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px}
-.section h2{font-size:clamp(28px,4.5vw,48px);font-weight:800;letter-spacing:-.025em;line-height:1.15;margin-bottom:14px}
-.section h2 .grad{background:var(--grad-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.section p.sub{font-size:16px;color:var(--text-mid);max-width:520px;margin:0 auto}
+/* Sections */
+.section{padding:88px 0;position:relative}
+.section-tag{display:inline-block;font-size:12px;font-weight:600;color:var(--accent-light);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.section h2{font-size:clamp(26px,4vw,44px);font-weight:510;letter-spacing:-.03em;line-height:1.1;margin-bottom:14px}
+.section .sub{font-size:16px;color:var(--text-3);max-width:480px;line-height:1.6}
 
-/* ===== Features ===== */
-.features{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden}
-.feature{background:var(--bg);padding:32px 28px;transition:background .3s;position:relative}
-.feature:hover{background:var(--surface)}
-.feature-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;border:1px solid var(--border2)}
-.feature-icon svg{width:20px;height:20px}
-.fi-blue{background:rgba(59,130,246,.08);color:var(--blue-light)}.fi-cyan{background:rgba(6,182,212,.08);color:var(--cyan-light)}
-.fi-emerald{background:rgba(16,185,129,.08);color:var(--emerald)}.fi-amber{background:rgba(245,158,11,.08);color:var(--amber)}
-.fi-violet{background:rgba(139,92,246,.08);color:#a78bfa}.fi-rose{background:rgba(244,63,94,.08);color:#fb7185}
-.feature h3{font-size:15px;font-weight:700;margin-bottom:8px;letter-spacing:-.01em}
-.feature p{font-size:13px;color:var(--text-mid);line-height:1.6}
+/* Features — editorial alternating rows, NOT grid */
+.feature-row{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;padding:64px 0;border-bottom:1px solid var(--border)}
+.feature-row:last-child{border-bottom:none}
+.feature-row.reverse{direction:rtl}
+.feature-row.reverse>*{direction:ltr}
+.feature-visual{height:260px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.feature-visual svg{opacity:.5}
+.feature-info .tag{font-size:11px;font-weight:600;color:var(--accent-light);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.feature-info h3{font-size:24px;font-weight:510;letter-spacing:-.02em;margin-bottom:10px}
+.feature-info p{font-size:15px;color:var(--text-3);line-height:1.65;margin-bottom:14px}
+.feature-info ul{list-style:none}
+.feature-info li{font-size:13px;color:var(--text-3);padding:4px 0;padding-left:18px;position:relative}
+.feature-info li::before{content:'';position:absolute;left:0;top:9px;width:12px;height:12px;border-radius:50%;border:1px solid var(--emerald);background:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") no-repeat center;background-size:8px}
 
-/* ===== Steps ===== */
-.steps-wrap{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;position:relative}
-.steps::before{content:'';position:absolute;top:36px;left:25%;right:25%;height:1px;background:linear-gradient(90deg,transparent,var(--border2) 20%,var(--border2) 80%,transparent);z-index:0}
-.step{text-align:center;position:relative;z-index:1}
-.step-num{width:72px;height:72px;border-radius:18px;background:var(--bg);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 18px;color:var(--blue-light)}
-.step h3{font-size:16px;font-weight:700;margin-bottom:6px}
-.step p{font-size:13px;color:var(--text-mid);max-width:260px;margin:0 auto}
+/* How — single column timeline, not cards */
+.how-list{margin-top:48px}
+.how-step{display:flex;gap:20px;padding:24px 0;border-bottom:1px solid var(--border)}
+.how-step:last-child{border-bottom:none}
+.how-num{font-size:13px;font-weight:600;color:var(--accent-light);min-width:24px;font-family:'JetBrains Mono',monospace}
+.how-content h3{font-size:16px;font-weight:510;margin-bottom:4px}
+.how-content p{font-size:14px;color:var(--text-3);line-height:1.6;max-width:500px}
 
-/* ===== Automations ===== */
-.auto-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.auto-chip{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:500;transition:all .2s}
-.auto-chip:hover{border-color:var(--border2);background:var(--surface2);transform:translateY(-1px)}
-.auto-chip .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+/* Automations — compact list, not grid */
+.auto-list{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:40px}
+.auto-item{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:500;color:var(--text-2);transition:all .15s}
+.auto-item:hover{border-color:var(--border2);background:var(--surface2);color:var(--text)}
+.auto-item .dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
 
-/* ===== Pricing ===== */
-.pricing-wrap{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-.pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:start}
-.price-card{background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:32px 28px;position:relative;transition:all .3s}
-.price-card:hover{border-color:var(--border2)}
-.price-card.featured{border-color:rgba(59,130,246,.3);box-shadow:var(--glow);background:linear-gradient(180deg,rgba(59,130,246,.04) 0%,var(--bg) 40%)}
-.price-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:3px 14px;border-radius:999px;background:var(--grad);font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.08em}
-.price-name{font-size:13px;font-weight:600;color:var(--text-mid);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em}
-.price-amount{font-size:42px;font-weight:800;letter-spacing:-.03em}
-.price-amount .per{font-size:15px;font-weight:500;color:var(--text-dim)}
-.price-desc{font-size:13px;color:var(--text-mid);margin:10px 0 20px;padding-bottom:20px;border-bottom:1px solid var(--border)}
-.price-features{list-style:none;margin-bottom:24px}
-.price-features li{font-size:13px;color:var(--text-mid);padding:7px 0;padding-left:24px;position:relative}
-.price-features li::before{content:'';position:absolute;left:0;top:11px;width:14px;height:14px;border-radius:50%;border:1px solid var(--emerald);background:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") no-repeat center;background-size:10px}
+/* Pricing — single column comparison, not 3 cards */
+.pricing-table{margin-top:40px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.pricing-row{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;padding:16px 24px;border-bottom:1px solid var(--border);align-items:center}
+.pricing-row:last-child{border-bottom:none}
+.pricing-row.head{background:var(--surface);font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
+.pricing-row.head .col-price{text-align:center}
+.pricing-row .col-name{font-size:13px;font-weight:500;color:var(--text-2)}
+.pricing-row .col-name .price{font-size:20px;font-weight:510;color:var(--text);display:block;margin-bottom:2px}
+.pricing-row .col-name .desc{font-size:12px;color:var(--text-4);font-weight:400}
+.pricing-row .col-val{text-align:center;font-size:13px;color:var(--text-3)}
+.pricing-row .col-val.check{color:var(--emerald)}
+.pricing-row .col-val .btn{margin:0 auto}
+.pricing-row.featured{background:rgba(94,106,210,.03)}
 
-/* ===== CTA ===== */
-.cta-section{text-align:center;padding:100px 24px}
-.cta-box{max-width:680px;margin:0 auto;position:relative}
-.cta-box h2{font-size:clamp(28px,4vw,42px);font-weight:800;letter-spacing:-.025em;margin-bottom:14px}
-.cta-box p{font-size:16px;color:var(--text-mid);margin-bottom:32px}
+/* CTA */
+.cta-section{padding:96px 0;text-align:left}
+.cta-box h2{font-size:clamp(28px,4vw,40px);font-weight:510;letter-spacing:-.03em;margin-bottom:12px}
+.cta-box p{font-size:16px;color:var(--text-3);margin-bottom:28px;max-width:440px}
 
-/* ===== Footer ===== */
-.footer{border-top:1px solid var(--border);padding:40px 0}
-.footer-inner{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
-.footer p{font-size:12px;color:var(--text-dim)}
+/* Footer */
+.footer{border-top:1px solid var(--border);padding:32px 0}
+.footer-inner{max-width:1140px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.footer p{font-size:12px;color:var(--text-4)}
 .footer-links{display:flex;gap:20px}
-.footer-links a{font-size:12px;color:var(--text-dim);transition:color .2s}.footer-links a:hover{color:var(--text-mid)}
+.footer-links a{font-size:12px;color:var(--text-4);transition:color .15s}.footer-links a:hover{color:var(--text-3)}
 
-/* ===== Responsive ===== */
-@media(max-width:900px){
-  .features,.steps,.pricing{grid-template-columns:1fr}
-  .auto-grid{grid-template-columns:repeat(2,1fr)}
+/* Responsive */
+@media(max-width:768px){
+  .feature-row{grid-template-columns:1fr;gap:32px}
+  .feature-row.reverse{direction:ltr}
   .nav-links{display:none}
-  .hero-stats{gap:32px}
-}
-@media(max-width:600px){
-  .auto-grid{grid-template-columns:1fr}
-  .hero-cta{flex-direction:column;align-items:stretch}
-  .hero-cta .btn{width:100%}
+  .hero h1{font-size:36px}
+  .hero{min-height:auto;padding:120px 0 60px}
 }
 </style>
 </head>
 <body>
 
-<!-- ===== NAV ===== -->
+<!-- NAV -->
 <nav class="nav" id="nav">
   <div class="nav-inner">
-    <a href="/" class="logo" data-sof-logo data-sof-size="30" data-sof-variant="light" data-sof-text="true"></a>
+    <a href="/" class="logo" data-sof-logo data-sof-size="24" data-sof-variant="light" data-sof-text="true"></a>
     <div class="nav-links">
       <a href="#features">Features</a>
       <a href="#how">How It Works</a>
-      <a href="#automations">Automations</a>
       <a href="#pricing">Pricing</a>
     </div>
     <div class="nav-cta">
@@ -155,224 +142,272 @@ a{color:inherit;text-decoration:none}
   </div>
 </nav>
 
-<!-- ===== HERO ===== -->
+<!-- HERO — left-aligned, asymmetric -->
 <section class="hero">
-  <div class="hero-grid"></div>
   <div class="hero-glow"></div>
-  <div class="hero-content">
-    <div class="hero-badge">
-      <span class="dot"></span>
-      AI-Powered Automation for Service Businesses
-    </div>
-    <h1>
-      Turn Missed Calls Into<br>
-      <span class="grad">Booked Revenue</span> — On Autopilot
-    </h1>
-    <p class="sub">
-      SmartOps Foundry captures every lead, follows up automatically, requests reviews,
-      and books appointments — all powered by AI, all approved by you before sending.
-    </p>
-    <div class="hero-cta">
-      <a href="/login.html?mode=signup" class="btn btn-primary btn-lg">
-        Start Automating Today
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </a>
-      <a href="#how" class="btn btn-outline btn-lg">See How It Works</a>
-    </div>
-    <div class="hero-stats">
-      <div class="stat"><div class="num">22+</div><div class="label">Automation Types</div></div>
-      <div class="stat"><div class="num">3 min</div><div class="label">Avg Setup Time</div></div>
-      <div class="stat"><div class="num">24/7</div><div class="label">Always Working</div></div>
-      <div class="stat"><div class="num">100%</div><div class="label">Human-Approved</div></div>
+  <div class="wrap">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        AI automation for service businesses
+      </div>
+      <h1>
+        Every missed call,<br>
+        <span class="accent">recovered automatically.</span>
+      </h1>
+      <p class="sub">
+        SmartOps Foundry captures leads, follows up, requests reviews, and books appointments —
+        all powered by AI, all approved by you before sending.
+      </p>
+      <div class="hero-cta">
+        <a href="/login.html?mode=signup" class="btn btn-primary btn-lg">
+          Start Automating
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#how" class="btn btn-ghost btn-lg">See how it works</a>
+      </div>
+      <div class="hero-meta">
+        <div class="meta-item"><div class="num">22+</div><div class="label">Automation types</div></div>
+        <div class="meta-item"><div class="num">3 min</div><div class="label">Avg setup time</div></div>
+        <div class="meta-item"><div class="num">24/7</div><div class="label">Always on</div></div>
+        <div class="meta-item"><div class="num">100%</div><div class="label">Human-approved</div></div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ===== FEATURES ===== -->
+<!-- FEATURES — editorial alternating rows -->
 <section class="section" id="features">
-  <div class="container">
-    <div class="section-head">
-      <div class="section-tag">Features</div>
-      <h2>Everything You Need to <span class="grad">Never Miss Revenue</span></h2>
-      <p class="sub">From the first missed call to the final review request — every touchpoint automated, every message reviewed by you.</p>
-    </div>
-    <div class="features">
-      <div class="feature">
-        <div class="feature-icon fi-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
-        <h3>Missed Call Text-Back</h3>
+  <div class="wrap">
+    <div class="section-tag">Features</div>
+    <h2>Built to never miss revenue.</h2>
+    <p class="sub">Every touchpoint — from the first missed call to the final review request — automated and approved by you.</p>
+  </div>
+  <div class="wrap" style="margin-top:16px">
+    <div class="feature-row">
+      <div class="feature-info">
+        <div class="tag">Lead Capture</div>
+        <h3>Missed call text-back</h3>
         <p>Every missed call gets an instant AI-crafted SMS. Turn dropped calls into booked appointments before they hit voicemail.</p>
+        <ul>
+          <li>Instant SMS response on missed call</li>
+          <li>AI-personalized message content</li>
+          <li>Approval before sending</li>
+        </ul>
       </div>
-      <div class="feature">
-        <div class="feature-icon fi-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
-        <h3>Smart Appointment Reminders</h3>
+      <div class="feature-visual">
+        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#5e6ad2" stroke-width="1.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </div>
+    </div>
+    <div class="feature-row reverse">
+      <div class="feature-info">
+        <div class="tag">Scheduling</div>
+        <h3>Smart appointment reminders</h3>
         <p>AI sends personalized reminders via SMS and email. Reduces no-shows by up to 70% with automatic follow-up sequences.</p>
+        <ul>
+          <li>SMS + email reminders</li>
+          <li>Automatic no-show recovery</li>
+          <li>Follow-up sequences</li>
+        </ul>
       </div>
-      <div class="feature">
-        <div class="feature-icon fi-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
-        <h3>Automated Review Requests</h3>
+      <div class="feature-visual">
+        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#5e6ad2" stroke-width="1.2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-info">
+        <div class="tag">Reputation</div>
+        <h3>Automated review requests</h3>
         <p>Trigger review requests after completed jobs. AI crafts personalized messages that get responses — boosting your reputation.</p>
+        <ul>
+          <li>Post-job review triggers</li>
+          <li>AI-personalized outreach</li>
+          <li>Response drafting</li>
+        </ul>
       </div>
-      <div class="feature">
-        <div class="feature-icon fi-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L2 22"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg></div>
-        <h3>Sales Pipeline Follow-Ups</h3>
-        <p>Quotes and estimates don't go cold. AI nurtures every lead with perfectly timed follow-ups across SMS and email.</p>
+      <div class="feature-visual">
+        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#5e6ad2" stroke-width="1.2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
       </div>
-      <div class="feature">
-        <div class="feature-icon fi-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"/></svg></div>
-        <h3>Approval-First Workflow</h3>
+    </div>
+    <div class="feature-row reverse">
+      <div class="feature-info">
+        <div class="tag">Workflow</div>
+        <h3>Approval-first, always</h3>
         <p>Nothing goes out without your say-so. AI drafts every message — you review, edit, and approve with one click.</p>
+        <ul>
+          <li>Draft → review → approve flow</li>
+          <li>One-click approval</li>
+          <li>Edit before sending</li>
+        </ul>
       </div>
-      <div class="feature">
-        <div class="feature-icon fi-rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></div>
-        <h3>Multi-Client Dashboard</h3>
-        <p>Manage unlimited businesses from one dashboard. Each client gets their own contacts, automations, and message history.</p>
+      <div class="feature-visual">
+        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#5e6ad2" stroke-width="1.2"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"/></svg>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== HOW IT WORKS ===== -->
-<div class="steps-wrap">
-  <section class="section" id="how">
-    <div class="container">
-      <div class="section-head">
-        <div class="section-tag">How It Works</div>
-        <h2>Live in <span class="grad">3 Simple Steps</span></h2>
-        <p class="sub">No technical setup. No long onboarding. Just connect your business and let AI handle the rest.</p>
-      </div>
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
-          <h3>Add Your Business</h3>
+<!-- HOW IT WORKS — single column timeline -->
+<section class="section" id="how" style="background:var(--bg-panel);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="wrap">
+    <div class="section-tag">How It Works</div>
+    <h2>Live in 3 steps.</h2>
+    <p class="sub">No technical setup. No long onboarding. Just connect your business and let AI handle the rest.</p>
+    <div class="how-list">
+      <div class="how-step">
+        <div class="how-num">01</div>
+        <div class="how-content">
+          <h3>Add your business</h3>
           <p>Create a client profile with your business name, industry, and contact info. Takes under a minute.</p>
         </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <h3>Pick Automations</h3>
+      </div>
+      <div class="how-step">
+        <div class="how-num">02</div>
+        <div class="how-content">
+          <h3>Pick automations</h3>
           <p>Choose from 22+ automation types — missed call text-back, review requests, follow-ups, reminders, and more.</p>
         </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <h3>Approve & Launch</h3>
+      </div>
+      <div class="how-step">
+        <div class="how-num">03</div>
+        <div class="how-content">
+          <h3>Approve & launch</h3>
           <p>AI drafts every message. You review, approve, and hit send. Everything goes out on your preferred channels.</p>
         </div>
       </div>
     </div>
-  </section>
-</div>
+  </div>
+</section>
 
-<!-- ===== AUTOMATION TYPES ===== -->
+<!-- AUTOMATIONS — compact list -->
 <section class="section" id="automations">
-  <div class="container">
-    <div class="section-head">
-      <div class="section-tag">Automation Library</div>
-      <h2>22+ Ways to <span class="grad">Never Lose a Lead</span></h2>
-      <p class="sub">Pick and mix automations across the entire customer journey — from first contact to repeat business.</p>
-    </div>
-    <div class="auto-grid">
-      <div class="auto-chip"><span class="dot" style="background:var(--blue)"></span>Missed Call Text-Back</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--blue)"></span>Lead Welcome Message</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--cyan)"></span>Appointment Reminders</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--cyan)"></span>No-Show Recovery</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--amber)"></span>Quote Follow-Up</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--amber)"></span>Estimate Follow-Up</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--amber)"></span>Nurture Sequence</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--amber)"></span>Upsell Campaign</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--emerald)"></span>Review Request</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--emerald)"></span>Review Response</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--emerald)"></span>Referral Request</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--emerald)"></span>Thank You Message</div>
-      <div class="auto-chip"><span class="dot" style="background:#a78bfa"></span>Social Media Post</div>
-      <div class="auto-chip"><span class="dot" style="background:#a78bfa"></span>Google Business Update</div>
-      <div class="auto-chip"><span class="dot" style="background:#a78bfa"></span>Seasonal Campaign</div>
-      <div class="auto-chip"><span class="dot" style="background:#a78bfa"></span>Newsletter</div>
-      <div class="auto-chip"><span class="dot" style="background:#fb7185"></span>Re-Engagement Campaign</div>
-      <div class="auto-chip"><span class="dot" style="background:#fb7185"></span>Win-Back Sequence</div>
-      <div class="auto-chip"><span class="dot" style="background:#fb7185"></span>Birthday Message</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--blue-light)"></span>Weekly Report</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--blue-light)"></span>Missed Revenue Alert</div>
-      <div class="auto-chip"><span class="dot" style="background:var(--blue-light)"></span>FAQ Auto-Responder</div>
+  <div class="wrap">
+    <div class="section-tag">Automation Library</div>
+    <h2>22+ ways to never lose a lead.</h2>
+    <p class="sub">Mix and match automations across the entire customer journey — from first contact to repeat business.</p>
+    <div class="auto-list">
+      <div class="auto-item"><span class="dot" style="background:#5e6ad2"></span>Missed Call Text-Back</div>
+      <div class="auto-item"><span class="dot" style="background:#5e6ad2"></span>Lead Welcome Message</div>
+      <div class="auto-item"><span class="dot" style="background:#7170ff"></span>Appointment Reminders</div>
+      <div class="auto-item"><span class="dot" style="background:#7170ff"></span>No-Show Recovery</div>
+      <div class="auto-item"><span class="dot" style="background:#f59e0b"></span>Quote Follow-Up</div>
+      <div class="auto-item"><span class="dot" style="background:#f59e0b"></span>Estimate Follow-Up</div>
+      <div class="auto-item"><span class="dot" style="background:#f59e0b"></span>Nurture Sequence</div>
+      <div class="auto-item"><span class="dot" style="background:#f59e0b"></span>Upsell Campaign</div>
+      <div class="auto-item"><span class="dot" style="background:#10b981"></span>Review Request</div>
+      <div class="auto-item"><span class="dot" style="background:#10b981"></span>Review Response</div>
+      <div class="auto-item"><span class="dot" style="background:#10b981"></span>Referral Request</div>
+      <div class="auto-item"><span class="dot" style="background:#10b981"></span>Thank You Message</div>
+      <div class="auto-item"><span class="dot" style="background:#a78bfa"></span>Social Media Post</div>
+      <div class="auto-item"><span class="dot" style="background:#a78bfa"></span>Google Business Update</div>
+      <div class="auto-item"><span class="dot" style="background:#a78bfa"></span>Seasonal Campaign</div>
+      <div class="auto-item"><span class="dot" style="background:#a78bfa"></span>Newsletter</div>
+      <div class="auto-item"><span class="dot" style="background:#fb7185"></span>Re-Engagement</div>
+      <div class="auto-item"><span class="dot" style="background:#fb7185"></span>Win-Back Sequence</div>
+      <div class="auto-item"><span class="dot" style="background:#fb7185"></span>Birthday Message</div>
+      <div class="auto-item"><span class="dot" style="background:#828fff"></span>Weekly Report</div>
+      <div class="auto-item"><span class="dot" style="background:#828fff"></span>Revenue Alert</div>
+      <div class="auto-item"><span class="dot" style="background:#828fff"></span>FAQ Auto-Responder</div>
     </div>
   </div>
 </section>
 
-<!-- ===== PRICING ===== -->
-<div class="pricing-wrap">
-  <section class="section" id="pricing">
-    <div class="container">
-      <div class="section-head">
-        <div class="section-tag">Pricing</div>
-        <h2>Simple, <span class="grad">Transparent Pricing</span></h2>
-        <p class="sub">Start free. Scale as you grow. No long-term contracts, cancel anytime.</p>
+<!-- PRICING — comparison table, not 3 cards -->
+<section class="section" id="pricing" style="background:var(--bg-panel);border-top:1px solid var(--border)">
+  <div class="wrap">
+    <div class="section-tag">Pricing</div>
+    <h2>Simple, transparent.</h2>
+    <p class="sub">Start with one business. Scale to unlimited. No long-term contracts, cancel anytime.</p>
+    <div class="pricing-table">
+      <div class="pricing-row head">
+        <div></div>
+        <div class="col-price">Starter — $97/mo</div>
+        <div class="col-price">Professional — $297/mo</div>
+        <div class="col-price">Agency — $697/mo</div>
       </div>
-      <div class="pricing">
-        <div class="price-card">
-          <div class="price-name">Starter</div>
-          <div class="price-amount">$97<span class="per">/mo</span></div>
-          <div class="price-desc">Perfect for a single service business</div>
-          <ul class="price-features">
-            <li>1 Business Profile</li>
-            <li>5 Active Automations</li>
-            <li>SMS + Email Channels</li>
-            <li>AI Message Drafting</li>
-            <li>Approval Workflow</li>
-            <li>Basic Analytics</li>
-          </ul>
-          <a href="/login.html?mode=signup&plan=starter" class="btn btn-outline" style="width:100%">Start Starter</a>
-        </div>
-        <div class="price-card featured">
-          <div class="price-badge">Most Popular</div>
-          <div class="price-name">Professional</div>
-          <div class="price-amount">$297<span class="per">/mo</span></div>
-          <div class="price-desc">For growing businesses with multiple locations</div>
-          <ul class="price-features">
-            <li>Up to 5 Business Profiles</li>
-            <li>All 22+ Automations</li>
-            <li>SMS + Email + Social</li>
-            <li>AI Research & Analysis</li>
-            <li>Approval Workflow</li>
-            <li>Advanced Analytics</li>
-            <li>Priority Support</li>
-          </ul>
-          <a href="/login.html?mode=signup&plan=pro" class="btn btn-primary" style="width:100%">Start Professional</a>
-        </div>
-        <div class="price-card">
-          <div class="price-name">Agency</div>
-          <div class="price-amount">$697<span class="per">/mo</span></div>
-          <div class="price-desc">For agencies managing multiple clients</div>
-          <ul class="price-features">
-            <li>Unlimited Business Profiles</li>
-            <li>All 22+ Automations</li>
-            <li>All Channels + API Access</li>
-            <li>White-Label Dashboard</li>
-            <li>Team Seats (up to 5)</li>
-            <li>Custom Automations</li>
-            <li>Dedicated Support</li>
-          </ul>
-          <a href="/login.html?mode=signup&plan=agency" class="btn btn-outline" style="width:100%">Start Agency</a>
-        </div>
+      <div class="pricing-row">
+        <div class="col-name">Business Profiles</div>
+        <div class="col-val">1</div>
+        <div class="col-val">Up to 5</div>
+        <div class="col-val">Unlimited</div>
+      </div>
+      <div class="pricing-row">
+        <div class="col-name">Active Automations</div>
+        <div class="col-val">5</div>
+        <div class="col-val">All 22+</div>
+        <div class="col-val">All 22+</div>
+      </div>
+      <div class="pricing-row">
+        <div class="col-name">Channels</div>
+        <div class="col-val">SMS + Email</div>
+        <div class="col-val">+ Social</div>
+        <div class="col-val">All + API</div>
+      </div>
+      <div class="pricing-row">
+        <div class="col-name">AI Message Drafting</div>
+        <div class="col-val check">✓</div>
+        <div class="col-val check">✓</div>
+        <div class="col-val check">✓</div>
+      </div>
+      <div class="pricing-row">
+        <div class="col-name">AI Research & Analysis</div>
+        <div class="col-val">—</div>
+        <div class="col-val check">✓</div>
+        <div class="col-val check">✓</div>
+      </div>
+      <div class="pricing-row">
+        <div class="col-name">Analytics</div>
+        <div class="col-val">Basic</div>
+        <div class="col-val">Advanced</div>
+        <div class="col-val">Advanced</div>
+      </div>
+      <div class="pricing-row">
+        <div class="col-name">White-Label Dashboard</div>
+        <div class="col-val">—</div>
+        <div class="col-val">—</div>
+        <div class="col-val check">✓</div>
+      </div>
+      <div class="pricing-row">
+        <div class="col-name">Team Seats</div>
+        <div class="col-val">1</div>
+        <div class="col-val">3</div>
+        <div class="col-val">Up to 5</div>
+      </div>
+      <div class="pricing-row">
+        <div class="col-name">Support</div>
+        <div class="col-val">Standard</div>
+        <div class="col-val">Priority</div>
+        <div class="col-val">Dedicated</div>
+      </div>
+      <div class="pricing-row featured">
+        <div class="col-name"></div>
+        <div class="col-val"><a href="/login.html?mode=signup&plan=starter" class="btn btn-ghost btn-sm">Get Started</a></div>
+        <div class="col-val"><a href="/login.html?mode=signup&plan=pro" class="btn btn-primary btn-sm">Get Started</a></div>
+        <div class="col-val"><a href="/login.html?mode=signup&plan=agency" class="btn btn-ghost btn-sm">Get Started</a></div>
       </div>
     </div>
-  </section>
-</div>
+  </div>
+</section>
 
-<!-- ===== CTA ===== -->
+<!-- CTA -->
 <section class="cta-section">
-  <div class="cta-box">
-    <h2>Ready to Automate?</h2>
-    <p>Join service businesses using SmartOps Foundry to capture more leads, close more jobs, and build better reviews — all on autopilot.</p>
-    <a href="/login.html?mode=signup" class="btn btn-primary btn-lg">
-      Get Started Free
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-    </a>
+  <div class="wrap">
+    <div class="cta-box">
+      <h2>Ready to automate?</h2>
+      <p>Join service businesses using SmartOps Foundry to capture more leads, close more jobs, and build better reviews — all on autopilot.</p>
+      <a href="/login.html?mode=signup" class="btn btn-primary btn-lg">
+        Get Started Free
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
   </div>
 </section>
 
-<!-- ===== FOOTER ===== -->
+<!-- FOOTER -->
 <footer class="footer">
   <div class="footer-inner">
-    <div class="logo" data-sof-logo data-sof-size="24" data-sof-variant="light" data-sof-animated="false"></div>
-    <p>© 2026 SmartOps Foundry. AI Automation for Service Businesses.</p>
+    <div class="logo" data-sof-logo data-sof-size="20" data-sof-variant="light" data-sof-animated="false"></div>
+    <p>© 2026 SmartOps Foundry</p>
     <div class="footer-links">
       <a href="#features">Features</a>
       <a href="#pricing">Pricing</a>
