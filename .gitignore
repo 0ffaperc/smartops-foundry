@@ -39,3 +39,9 @@ public/v3data/
 # Image cache
 image_cache/
 audio_cache/
+
+# Automation pilot test/local data
+agency-data/
+agency-data-test/
+.env.test
+.env.local

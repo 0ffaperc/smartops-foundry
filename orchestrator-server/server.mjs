@@ -31,8 +31,8 @@ function pickModel(mode) {
   return FAST_MODEL;
 }
 
-const HERMES = process.env.HERMES_BIN ||
-  'C:/Users/shahe/AppData/Local/hermes/hermes-agent/venv/Scripts/hermes';
+// Hermes binary — configurable via env. Default to PATH lookup ('hermes').
+const HERMES = process.env.HERMES_BIN || 'hermes';
 
 // ---- LifeOS context --------------------------------------------------------
 function buildContext(appState = {}, today) {
@@ -213,11 +213,23 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  // ---- Agency Ops data (Summit Air demo) ----------------------------------
+  // ---- Automation Pilot (/api/pilot/* and /pilot) ----
+  try {
+    const { mountPilotRoutes } = await import('./pilot/routes.mjs');
+    if (await mountPilotRoutes(req, res)) return;
+  } catch (e) {
+    // fail open: pilot errors must not break the rest of the server
+    if (req.url.startsWith('/api/pilot/') || req.url === '/pilot' || req.url === '/pilot.html') {
+      send(res, 500, { ok: false, error: 'pilot module error: ' + String(e) });
+      return;
+    }
+  }
+
+// ---- Agency Ops data (Summit Air demo) ----------------------------------
   // Serves the local CRM + calendar JSON so the AgencyOps screen can render
   // live data without bundling it into the frontend.
   if (req.method === 'GET' && req.url === '/api/agency-data') {
-    const AGENCY_DIR = 'C:/Users/shahe/AppData/Local/hermes/agency-data';
+    const AGENCY_DIR = process.env.AGENCY_DATA_DIR || pathJoin(process.cwd(), 'agency-data');
     try {
       const crmPath = pathJoin(AGENCY_DIR, 'summit-air-crm.json');
       const calPath = pathJoin(AGENCY_DIR, 'summit-air-calendar.json');
