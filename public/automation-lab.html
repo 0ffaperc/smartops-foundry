@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartOps Foundry — Automation Lab</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#08090a;--bg-panel:#0f1011;
+  --card:rgba(255,255,255,.02);--card-hover:rgba(255,255,255,.04);
+  --border:rgba(255,255,255,.05);--border-strong:rgba(255,255,255,.08);
+  --text:#f7f8f8;--text-2:#d0d6e0;--text-3:#8a8f98;--text-4:#62666d;
+  --accent:#5e6ad2;--accent-light:#7170ff;--accent-hover:#828fff;
+  --emerald:#10b981;--amber:#f59e0b;--rose:#f43f5e;
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;min-height:100vh;font-feature-settings:"cv01","ss03"}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:3px}
+::selection{background:rgba(94,106,210,.3);color:#fff}
+a{color:inherit;text-decoration:none}
+
+/* Layout */
+.wrap{max-width:1140px;margin:0 auto;padding:0 24px}
+.lab{padding:80px 0 48px}
+.lab-head{margin-bottom:32px}
+.lab-head h1{font-size:32px;font-weight:510;letter-spacing:-.03em;margin-bottom:6px}
+.lab-head p{font-size:14px;color:var(--text-3)}
+
+/* Filters */
+.filters{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.filter-group{display:flex;gap:6px;flex-wrap:wrap}
+.filter-btn{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text-3);transition:all .12s;font-family:inherit}
+.filter-btn:hover{color:var(--text-2);border-color:var(--border-strong)}
+.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Run all bar */
+.run-bar{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:24px}
+.run-bar .summary{flex:1;font-size:13px;color:var(--text-3)}
+.run-bar .summary b{color:var(--text);font-weight:510}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .12s;font-family:inherit}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent-hover)}
+.btn-ghost{background:var(--card);color:var(--text-2);border:1px solid var(--border-strong)}.btn-ghost:hover{background:var(--card-hover)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Results grid */
+.results{display:flex;flex-direction:column;gap:10px}
+.result-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;transition:all .15s}
+.result-card:hover{border-color:var(--border-strong)}
+.result-card.passed{border-left:3px solid var(--emerald)}
+.result-card.failed{border-left:3px solid var(--rose)}
+.rc-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.rc-score{font-size:20px;font-weight:510;letter-spacing:-.02em}
+.rc-score.pass{color:var(--emerald)}.rc-score.fail{color:var(--rose)}
+.rc-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em}
+.rc-badge.pass{background:rgba(16,185,129,.1);color:var(--emerald)}
+.rc-badge.fail{background:rgba(244,63,94,.1);color:var(--rose)}
+.rc-meta{font-size:11px;color:var(--text-4);margin-left:auto}
+.rc-type{font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace}
+.rc-body{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.rc-col h4{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-4);margin-bottom:6px}
+.rc-text{font-size:12px;color:var(--text-2);line-height:1.6;background:rgba(0,0,0,.15);border:1px solid var(--border);border-radius:6px;padding:10px;white-space:pre-wrap}
+.rc-criteria{margin-top:10px;display:flex;gap:4px;flex-wrap:wrap}
+.crit{font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid;font-weight:500}
+.crit.pass{background:rgba(16,185,129,.05);color:var(--emerald);border-color:rgba(16,185,129,.1)}
+.crit.fail{background:rgba(244,63,94,.05);color:var(--rose);border-color:rgba(244,63,94,.1)}
+.rc-loading{padding:20px;text-align:center;color:var(--text-4);font-size:13px}
+
+/* Summary stats */
+.stats-row{display:flex;gap:12px;margin-bottom:24px}
+.stat-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px}
+.stat-box .val{font-size:24px;font-weight:510;letter-spacing:-.02em}
+.stat-box .lbl{font-size:10px;color:var(--text-4);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.stat-box.avg .val{color:var(--accent-light)}
+
+@media(max-width:768px){
+  .rc-body{grid-template-columns:1fr}
+  .stats-row{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<div class="lab wrap">
+  <div class="lab-head">
+    <h1>Automation Lab</h1>
+    <p>5 automations × 5 niches = 25 benchmark tests. Each AI output is scored against a gold-standard benchmark.</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-group" id="typeFilters">
+      <button class="filter-btn active" data-type="all">All Types</button>
+      <button class="filter-btn" data-type="missed_call_textback">Missed Call</button>
+      <button class="filter-btn" data-type="appointment_reminder">Reminder</button>
+      <button class="filter-btn" data-type="review_request">Review Request</button>
+      <button class="filter-btn" data-type="quote_followup">Quote Follow-Up</button>
+      <button class="filter-btn" data-type="no_show_recovery">No-Show Recovery</button>
+    </div>
+  </div>
+
+  <!-- Summary stats -->
+  <div class="stats-row" id="statsRow" style="display:none">
+    <div class="stat-box"><div class="val" id="statTotal">0</div><div class="lbl">Tests Run</div></div>
+    <div class="stat-box"><div class="val" id="statPassed" style="color:var(--emerald)">0</div><div class="lbl">Passed</div></div>
+    <div class="stat-box"><div class="val" id="statFailed" style="color:var(--rose)">0</div><div class="lbl">Failed</div></div>
+    <div class="stat-box avg"><div class="val" id="statAvg">0</div><div class="lbl">Avg Score</div></div>
+  </div>
+
+  <!-- Run bar -->
+  <div class="run-bar">
+    <div class="summary" id="runSummary">Select a filter or run all 25 tests.</div>
+    <button class="btn btn-primary" id="runAllBtn" onclick="runAll()">Run All Tests</button>
+    <button class="btn btn-ghost" id="runFilteredBtn" onclick="runFiltered()" style="display:none">Run Filtered</button>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+    <div class="rc-loading">No tests run yet. Click "Run All Tests" to begin.</div>
+  </div>
+</div>
+
+<script>
+let currentType='all';
+let scenarios=[];
+const API='/api/automation-lab';
+
+// Load scenarios
+async function loadScenarios(){
+  try{
+    const res=await fetch(`${API}/scenarios`);
+    const data=await res.json();
+    if(data.ok) scenarios=data.scenarios;
+  }catch(e){}
+}
+loadScenarios();
+
+// Filter buttons
+document.querySelectorAll('#typeFilters .filter-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('#typeFilters .filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentType=btn.dataset.type;
+    const btn2=document.getElementById('runFilteredBtn');
+    if(currentType==='all'){btn2.style.display='none';document.getElementById('runSummary').textContent='Run all 25 tests.';}
+    else{btn2.style.display='inline-flex';const count=scenarios.filter(s=>s.automation_type===currentType).length;document.getElementById('runSummary').textContent=`${count} test(s) for ${currentType}.`;}
+  };
+});
+
+// Run all 25
+async function runAll(){
+  await runTests(null);
+}
+async function runFiltered(){
+  await runTests(currentType==='all'?null:currentType);
+}
+
+async function runTests(type){
+  const btn=document.getElementById('runAllBtn');
+  const btn2=document.getElementById('runFilteredBtn');
+  btn.disabled=true;btn2.disabled=true;
+  btn.innerHTML='<div class="spinner"></div> Running...';
+  document.getElementById('results').innerHTML='<div class="rc-loading">Running AI on benchmark scenarios... This takes ~30 seconds for all 25.</div>';
+  document.getElementById('statsRow').style.display='none';
+
+  try{
+    const res=await fetch(`${API}/run-all`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type})
+    });
+    const data=await res.json();
+    if(data.ok) renderResults(data);
+    else document.getElementById('results').innerHTML=`<div class="rc-loading">Error: ${data.error}</div>`;
+  }catch(e){
+    document.getElementById('results').innerHTML=`<div class="rc-loading">Connection error. Is the backend running?</div>`;
+  }
+  btn.disabled=false;btn2.disabled=false;
+  btn.innerHTML='Run All Tests';
+}
+
+function renderResults(data){
+  document.getElementById('statsRow').style.display='flex';
+  document.getElementById('statTotal').textContent=data.total;
+  document.getElementById('statPassed').textContent=data.passed;
+  document.getElementById('statFailed').textContent=data.failed;
+  document.getElementById('statAvg').textContent=data.avg_score;
+
+  let filterType=currentType==='all'?null:currentType;
+  let results=filterType?data.results.filter(r=>r.automation_type===filterType):data.results;
+
+  const html=results.map(r=>{
+    if(r.error) return `<div class="result-card failed"><div class="rc-head"><span class="rc-type">${r.scenario_id}</span><span class="rc-badge fail">ERROR</span></div><div style="font-size:12px;color:var(--rose)">${r.error}</div></div>`;
+    const passClass=r.passed?'passed':'failed';
+    const scoreClass=r.passed?'pass':'fail';
+    const badgeClass=r.passed?'pass':'fail';
+    const criteriaHtml=(r.criteria||[]).map(c=>{
+      const cls=c.passed?'pass':'fail';
+      return `<span class="crit ${cls}" title="${c.criterion}">${c.earned}/${c.weight}</span>`;
+    }).join('');
+    return `<div class="result-card ${passClass}">
+      <div class="rc-head">
+        <span class="rc-score ${scoreClass}">${r.score}/100</span>
+        <span class="rc-badge ${badgeClass}">${r.passed?'PASS':'FAIL'}</span>
+        <span class="rc-type">${r.scenario_id}</span>
+        <span class="rc-meta">${r.niche} • ${r.company_name}</span>
+      </div>
+      <div class="rc-body">
+        <div class="rc-col"><h4>AI Output</h4><div class="rc-text">${r.ai_output||''}</div></div>
+        <div class="rc-col"><h4>Benchmark (Gold Standard)</h4><div class="rc-text" style="color:var(--text-3)">${r.benchmark_output||''}</div></div>
+      </div>
+      <div class="rc-criteria">${criteriaHtml}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('results').innerHTML=html||'<div class="rc-loading">No results.</div>';
+}
+</script>
+</body>
+</html>

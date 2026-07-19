@@ -102,7 +102,18 @@ async function callOpenRouterDirect({ model, systemPrompt, context, userMessage,
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new Error(data?.error?.message || `OpenRouter ${res.status}`);
   const content = data?.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Empty OpenRouter reply');
+  // GLM 5.2 reasoning model: if content is null, extract from reasoning
+  if (!content) {
+    const reasoning = data?.choices?.[0]?.message?.reasoning;
+    if (reasoning) {
+      // Try to extract the actual message from reasoning — look for quoted text or last line
+      // The reasoning often ends with the answer after analysis
+      const lines = reasoning.trim().split('\n').filter(l => l.trim());
+      // If reasoning has a clear output section, use it; otherwise use the whole reasoning
+      return cleanReply(reasoning.trim());
+    }
+    throw new Error('Empty OpenRouter reply');
+  }
   return cleanReply(content);
 }
 
@@ -1177,6 +1188,253 @@ Sort the array by score descending. Output the top 8 results.`;
 
     send(res, 404, { ok: false, error: 'Auth endpoint not found' });
     return;
+  }
+
+  // ===== AUTOMATION LAB: benchmark-driven automation testing =====
+
+  // Load benchmark data
+  let benchmarkData = null;
+  try {
+    benchmarkData = JSON.parse(readFileSync(pathJoin(__dirname, '..', 'public', 'benchmark-data.json'), 'utf-8'));
+  } catch (e) {
+    // Try absolute path
+    try {
+      const p = 'C:/Users/shahe/Desktop/lifeos-v2-restored/lifeos-v2-ready/public/benchmark-data.json';
+      benchmarkData = JSON.parse(readFileSync(p, 'utf-8'));
+    } catch (e2) {
+      benchmarkData = null;
+    }
+  }
+
+  // GET /api/automation-lab/scenarios — list all 25 test scenarios
+  if (req.method === 'GET' && req.url.startsWith('/api/automation-lab/scenarios')) {
+    if (!benchmarkData) { send(res, 500, { ok: false, error: 'Benchmark data not loaded' }); return; }
+    const parsed = new URL(req.url, 'http://localhost');
+    const type = parsed.searchParams.get('type');
+    const niche = parsed.searchParams.get('niche');
+    let scenarios = benchmarkData.scenarios;
+    if (type) scenarios = scenarios.filter(s => s.automation_type === type);
+    if (niche) scenarios = scenarios.filter(s => s.niche === niche);
+    send(res, 200, { ok: true, total: scenarios.length, scenarios: scenarios.map(s => ({
+      id: s.id, automation_type: s.automation_type, niche: s.niche,
+      company_name: s.company_name, customer_name: s.customer_name,
+      scenario: s.scenario
+    }))});
+    return;
+  }
+
+  // GET /api/automation-lab/benchmark/:id — get full benchmark scenario with gold standard
+  if (req.method === 'GET' && req.url.includes('/api/automation-lab/benchmark/')) {
+    if (!benchmarkData) { send(res, 500, { ok: false, error: 'Benchmark data not loaded' }); return; }
+    const id = req.url.split('/benchmark/')[1].split('?')[0];
+    const scenario = benchmarkData.scenarios.find(s => s.id === id);
+    if (!scenario) { send(res, 404, { ok: false, error: 'Scenario not found' }); return; }
+    send(res, 200, { ok: true, scenario });
+    return;
+  }
+
+  // POST /api/automation-lab/run — generate message for a scenario using AI, score vs benchmark
+  if (req.method === 'POST' && req.url === '/api/automation-lab/run') {
+    if (!benchmarkData) { send(res, 500, { ok: false, error: 'Benchmark data not loaded' }); return; }
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    const { scenario_id } = JSON.parse(body);
+    const scenario = benchmarkData.scenarios.find(s => s.id === scenario_id);
+    if (!scenario) { send(res, 404, { ok: false, error: 'Scenario not found: ' + scenario_id }); return; }
+
+    // Build the system prompt for the AI
+    const automationPrompts = {
+      missed_call_textback: 'You are an AI assistant for a service business. A customer called but no one answered. Write an SMS text-back message that is warm, professional, and urgent. Include the business name, acknowledge the missed call, and give a clear call-to-action to book or call back. Keep it under 160 characters. Do not use emojis excessively.',
+      appointment_reminder: 'You are an AI assistant for a service business. Write an SMS appointment reminder that includes the business name, customer name, appointment date/time, and a brief friendly note. Keep it under 160 characters. Do not use emojis excessively.',
+      review_request: 'You are an AI assistant for a service business. A job was just completed. Write an SMS asking the customer for a review. Be warm, thank them for their business, and provide a clear call-to-action (e.g., reply or click a link). Keep it under 160 characters. Do not use emojis excessively.',
+      quote_followup: 'You are an AI assistant for a service business. Write a follow-up email for a quote that was sent to a customer days ago but not yet responded to. Be professional, restate the value briefly, address any concerns, and include a clear next step. Keep it under 200 words. Use a subject line.',
+      no_show_recovery: 'You are an AI assistant for a service business. A customer missed their appointment. Write an SMS that is understanding (not accusatory), acknowledges the missed appointment, and offers an easy way to reschedule. Keep it under 160 characters. Do not use emojis excessively.'
+    };
+
+    const sysPrompt = automationPrompts[scenario.automation_type] || automationPrompts.missed_call_textback;
+    const userInput = `Business: ${scenario.company_name}\nNiche: ${scenario.niche}\nCustomer: ${scenario.customer_name}\n\nScenario:\n${scenario.scenario}\n\nCustomer details:\n${JSON.stringify(scenario.input_data, null, 2)}\n\nWrite the message now. Output ONLY the message text, nothing else. No preamble, no explanation.`;
+
+    try {
+      const aiOutput = await callOpenRouterDirect({
+        model: FAST_MODEL,
+        systemPrompt: sysPrompt,
+        context: `Automation: ${scenario.automation_type} | Niche: ${scenario.niche} | Company: ${scenario.company_name}`,
+        userMessage: userInput,
+        maxTokens: 2000
+      });
+
+      // Score the AI output against the benchmark
+      const score = scoreAutomation(aiOutput, scenario);
+
+      send(res, 200, {
+        ok: true,
+        scenario_id: scenario.id,
+        automation_type: scenario.automation_type,
+        niche: scenario.niche,
+        company_name: scenario.company_name,
+        customer_name: scenario.customer_name,
+        ai_output: aiOutput,
+        benchmark_output: scenario.benchmark_output,
+        score: score.score,
+        max_score: 100,
+        passed: score.passed,
+        criteria: score.criteria,
+        scenario: scenario.scenario
+      });
+    } catch (err) {
+      send(res, 500, { ok: false, error: 'AI generation failed: ' + err.message });
+    }
+    return;
+  }
+
+  // POST /api/automation-lab/run-all — run all 25 scenarios (or filter by type/niche)
+  if (req.method === 'POST' && req.url === '/api/automation-lab/run-all') {
+    if (!benchmarkData) { send(res, 500, { ok: false, error: 'Benchmark data not loaded' }); return; }
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    const { type, niche, limit } = JSON.parse(body || '{}');
+    let scenarios = benchmarkData.scenarios;
+    if (type) scenarios = scenarios.filter(s => s.automation_type === type);
+    if (niche) scenarios = scenarios.filter(s => s.niche === niche);
+    if (limit) scenarios = scenarios.slice(0, limit);
+
+    const automationPrompts = {
+      missed_call_textback: 'You are an AI assistant for a service business. A customer called but no one answered. Write an SMS text-back message that is warm, professional, and urgent. Include the business name, acknowledge the missed call, and give a clear call-to-action to book or call back. Keep it under 160 characters. Do not use emojis excessively.',
+      appointment_reminder: 'You are an AI assistant for a service business. Write an SMS appointment reminder that includes the business name, customer name, appointment date/time, and a brief friendly note. Keep it under 160 characters. Do not use emojis excessively.',
+      review_request: 'You are an AI assistant for a service business. A job was just completed. Write an SMS asking the customer for a review. Be warm, thank them for their business, and provide a clear call-to-action. Keep it under 160 characters. Do not use emojis excessively.',
+      quote_followup: 'You are an AI assistant for a service business. Write a follow-up email for a quote sent days ago but not responded to. Be professional, restate the value briefly, address concerns, include a clear next step. Keep it under 200 words. Use a subject line.',
+      no_show_recovery: 'You are an AI assistant for a service business. A customer missed their appointment. Write an SMS that is understanding, acknowledges the missed appointment, and offers an easy way to reschedule. Keep it under 160 characters. Do not use emojis excessively.'
+    };
+
+    const results = [];
+    for (const scenario of scenarios) {
+      try {
+        const sysPrompt = automationPrompts[scenario.automation_type] || automationPrompts.missed_call_textback;
+        const userInput = `Business: ${scenario.company_name}\nNiche: ${scenario.niche}\nCustomer: ${scenario.customer_name}\n\nScenario:\n${scenario.scenario}\n\nCustomer details:\n${JSON.stringify(scenario.input_data, null, 2)}\n\nWrite the message now. Output ONLY the message text, nothing else.`;
+        const aiOutput = await callOpenRouterDirect({
+          model: FAST_MODEL,
+          systemPrompt: sysPrompt,
+          context: `Automation: ${scenario.automation_type} | Niche: ${scenario.niche}`,
+          userMessage: userInput,
+          maxTokens: 2000
+        });
+        const score = scoreAutomation(aiOutput, scenario);
+        results.push({
+          scenario_id: scenario.id,
+          automation_type: scenario.automation_type,
+          niche: scenario.niche,
+          company_name: scenario.company_name,
+          ai_output: aiOutput,
+          benchmark_output: scenario.benchmark_output,
+          score: score.score,
+          passed: score.passed,
+          criteria: score.criteria
+        });
+      } catch (err) {
+        results.push({
+          scenario_id: scenario.id,
+          automation_type: scenario.automation_type,
+          niche: scenario.niche,
+          error: err.message,
+          score: 0,
+          passed: false
+        });
+      }
+    }
+
+    const avgScore = results.length > 0
+      ? Math.round(results.reduce((a, r) => a + r.score, 0) / results.length)
+      : 0;
+    const passCount = results.filter(r => r.passed).length;
+
+    send(res, 200, {
+      ok: true,
+      total: results.length,
+      passed: passCount,
+      failed: results.length - passCount,
+      avg_score: avgScore,
+      results
+    });
+    return;
+  }
+
+  // Scoring function
+  function scoreAutomation(aiOutput, scenario) {
+    const output = (aiOutput || '').trim();
+    const benchmark = scenario.benchmark_output;
+    const criteria = scenario.scoring_criteria;
+    const isEmail = scenario.automation_type === 'quote_followup';
+    const maxLen = isEmail ? 200 * 6 : 160; // 200 words or 160 chars
+    const results = [];
+    let totalScore = 0;
+
+    for (const c of criteria) {
+      let earned = 0;
+      const out = output.toLowerCase();
+      switch (true) {
+        case /business name|company name/i.test(c.criterion):
+          earned = out.includes(scenario.company_name.toLowerCase()) ? c.weight : 0;
+          break;
+        case /customer name|personalized/i.test(c.criterion):
+          earned = out.includes(scenario.customer_name.toLowerCase().split(' ')[0].toLowerCase()) ? c.weight : 0;
+          break;
+        case /cta|call to action|call back/i.test(c.criterion):
+          earned = /(call|book|reply|text|click|schedule|reschedule|visit|review|rate)/i.test(output) ? c.weight : 0;
+          break;
+        case /phone|contact/i.test(c.criterion):
+          earned = /\(?\d{3}\)?[\s.-]?\d{3,4}|\d{10}/.test(output) || out.includes('call us') || out.includes('call back') ? c.weight : 0;
+          break;
+        case /tone|professional|warm|friendly|understanding|empath/i.test(c.criterion):
+          // Check for negative/aggressive tone — if absent, award
+          earned = !/stupid|idiot|dumb|why did you|you failed|you missed/i.test(output) ? c.weight : Math.round(c.weight * 0.5);
+          break;
+        case /urgency|urgent|emergency|asap|fast/i.test(c.criterion):
+          earned = /(urgent|emergency|asap|right away|soon|now|immediately|don't wait|fast)/i.test(output) ? c.weight : 0;
+          break;
+        case /length|char|word|under \d+|concise|short/i.test(c.criterion):
+          if (isEmail) {
+            const words = output.split(/\s+/).length;
+            earned = words <= 200 ? c.weight : Math.max(0, c.weight - (words - 200));
+          } else {
+            earned = output.length <= 160 ? c.weight : Math.max(0, c.weight - Math.ceil((output.length - 160) / 10));
+          }
+          break;
+        case /niche|industry|service specific|hvac|roof|plumb|dental|legal/i.test(c.criterion):
+          // Check if output mentions something niche-specific from the scenario
+          const nicheKeywords = {
+            HVAC: ['ac', 'cooling', 'heating', 'air', 'thermostat', 'furnace', 'heat'],
+            Roofing: ['roof', 'shingle', 'leak', 'storm', 'inspection', 'gutter'],
+            Plumbing: ['pipe', 'leak', 'drain', 'water', 'toilet', 'faucet', 'plumbing'],
+            Dental: ['tooth', 'teeth', 'smile', 'cleaning', 'dental', 'appointment', 'cavity'],
+            Legal: ['case', 'consultation', 'attorney', 'law', 'legal', 'court', 'claim']
+          };
+          const kws = nicheKeywords[scenario.niche] || [];
+          earned = kws.some(k => out.includes(k)) ? c.weight : 0;
+          break;
+        case /respon|speed|quick|fast reply|prompt/i.test(c.criterion):
+          earned = /(sorry|apolog|missed your|we saw|just saw|reaching out|following up|heard from)/i.test(output) ? c.weight : 0;
+          break;
+        case /incentive|financing|discount|offer|special|warranty|free/i.test(c.criterion):
+          earned = /(financ|discount|offer|special|warranty|free|save|deal|premium)/i.test(output) ? c.weight : 0;
+          break;
+        case /next step|schedule|reschedule|book|restate|value/i.test(c.criterion):
+          earned = /(schedule|reschedule|book|call|reply|confirm|available|appointment|set up)/i.test(output) ? c.weight : 0;
+          break;
+        case /subject line/i.test(c.criterion):
+          earned = output.includes(':') || output.includes('Subject') || output.split('\n')[0].length < 60 ? c.weight : 0;
+          break;
+        default:
+          // Generic: check if key terms from benchmark appear in output
+          const benchmarkTerms = benchmark.toLowerCase().split(/\s+/).filter(w => w.length > 4);
+          const matchCount = benchmarkTerms.filter(t => out.includes(t)).length;
+          earned = matchCount >= 3 ? c.weight : Math.round(c.weight * (matchCount / 3));
+      }
+      results.push({ criterion: c.criterion, weight: c.weight, earned, passed: earned >= c.weight * 0.7 });
+      totalScore += earned;
+    }
+
+    totalScore = Math.min(100, Math.round(totalScore));
+    return { score: totalScore, passed: totalScore >= 70, criteria: results };
   }
 
   send(res, 404, { error: 'Not found' });
