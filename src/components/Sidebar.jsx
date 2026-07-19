@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Target, ListTodo, RefreshCw, Brain, Bot,
   FileText, BarChart3, Settings, ChevronRight, CandlestickChart,
-  GraduationCap, NotebookPen, Sparkles, Building2, Youtube,
+  GraduationCap, NotebookPen, Sparkles, Building2, Youtube, Zap,
 } from 'lucide-react';
 import { useApp } from '../App';
 
@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { id: 'tradingJournal', icon: NotebookPen, label: 'Trading Journal' },
   { id: 'percJrTools', icon: Sparkles, label: 'Perc Jr. Tools' },
   { id: 'agencyOps', icon: Building2, label: 'Agency Ops' },
+  { id: 'pilotAutomation', icon: Zap, label: 'Automation Pilot' },
   { id: 'clipBuilder', icon: Youtube, label: 'Clip Builder' },
   { id: 'planner', icon: Brain, label: 'Planner' },
   { id: 'dailyReview', icon: FileText, label: 'Daily Review' },
