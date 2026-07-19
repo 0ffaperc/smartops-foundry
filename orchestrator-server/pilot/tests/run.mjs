@@ -1,7 +1,25 @@
 // pilot/tests/run.mjs — Lightweight test runner for the Automation Pilot.
 // Runs in simulate mode against a temp data dir. No network, no real keys.
 // Usage:  AGENCY_DATA_DIR=./agency-data-test node pilot/tests/run.mjs
+import { existsSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { CFG } from '../env.mjs';
+
+// ---- Test isolation: clear ONLY the pilot/ subdirectory under AGENCY_DATA_DIR ----
+// This prevents persisted events/jobs from prior runs contaminating the next run.
+// We never touch AGENCY_DATA_DIR itself (which may hold production client data),
+// only the pilot/ subfolder that this test suite owns.
+const PILOT_DIR = CFG.PILOT_DATA_DIR; // <AGENCY_DATA_DIR>/pilot
+if (existsSync(PILOT_DIR)) {
+  rmSync(PILOT_DIR, { recursive: true, force: true });
+}
+// Safety: refuse to run if AGENCY_DATA_DIR looks like production (no -test suffix and exists with clients/)
+const dataDir = CFG.AGENCY_DATA_DIR;
+if (existsSync(join(dataDir, 'clients')) && !dataDir.includes('test')) {
+  console.error('ABORT: AGENCY_DATA_DIR appears to be a production data directory (has clients/). Use a -test suffix.');
+  process.exit(2);
+}
+
 import { createJob, approve, cancel, listJobs, STATUSES } from '../engine.mjs';
 import { handleInboundSms, isOptedOut, optOut, optIn } from '../sms.mjs';
 import { scheduleFollowup, cancelForLead, listSchedule } from '../scheduler.mjs';
