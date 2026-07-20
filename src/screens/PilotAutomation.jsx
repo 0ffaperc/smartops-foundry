@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Zap, RefreshCw, Loader2, AlertCircle, Activity, Users, Mail,
-  MessageSquare, Calendar, Clock, Phone, Webhook, ShieldX,
-  CheckCircle2, XCircle, ArrowRight,
+  MessageSquare, Calendar, Clock, Phone, Webhook, ShieldAlert,
+  CheckCircle2, XCircle, ArrowRight, Plus, Edit3, X, Send, Ban,
+  AlertTriangle,
 } from 'lucide-react';
 import { pilotApi } from '../lib/pilotApi';
 
@@ -20,6 +21,9 @@ const TABS = [
 ];
 
 const POLL_INTERVAL = 5000;
+const CANCELLABLE_JOB_STATUSES = ['pending', 'approved'];
+const CANCELLABLE_SCHEDULE_STATUSES = ['scheduled'];
+
 const STATUS_COLORS = {
   pending: 'text-amber-400', approved: 'text-violet-400', simulated: 'text-amber-400',
   sent: 'text-sky-400', delivered: 'text-emerald-400', failed: 'text-rose-400',
@@ -44,15 +48,6 @@ function ChannelIcon({ channel }) {
   return <Icon className="w-3.5 h-3.5 text-white/40" strokeWidth={1.5} />;
 }
 
-function ComingSoon({ label }) {
-  return (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.02] border border-white/[0.04] text-xs text-white/30">
-      <Clock className="w-3.5 h-3.5" strokeWidth={1.5} />
-      {label || 'Coming in the next stage'}
-    </div>
-  );
-}
-
 // ---- Empty / Error / Loading states ----
 function EmptyState({ label }) {
   return <div className="text-center py-12 text-white/30 text-sm">{label || 'No data available'}</div>;
@@ -66,7 +61,73 @@ function ErrorState({ error }) {
   );
 }
 
-// ---- Main component ----
+// ---- Toast ----
+function Toast({ toast }) {
+  if (!toast) return null;
+  const colors = {
+    success: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+    error: 'bg-rose-500/10 border-rose-500/20 text-rose-400',
+    info: 'bg-sky-500/10 border-sky-500/20 text-sky-400',
+  };
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl border text-sm ${colors[toast.type] || colors.info}`}
+      >
+        {toast.msg}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+// ---- Confirm Dialog ----
+function ConfirmDialog({ open, title, message, confirmLabel, onConfirm, onCancel, danger }) {
+  if (!open) return null;
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        onClick={onCancel}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          className="bg-surface-100 border border-white/10 rounded-2xl p-6 max-w-sm w-full mx-4"
+          onClick={e => e.stopPropagation()}
+        >
+          <h3 className="text-base font-semibold text-white/90 mb-2">{title}</h3>
+          <p className="text-sm text-white/50 mb-5">{message}</p>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={onCancel}
+              className="px-4 py-2 rounded-lg text-sm text-white/50 hover:text-white/80 hover:bg-white/[0.04] transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
+                ${danger ? 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/25' : 'bg-gold-500/15 text-gold-400 hover:bg-gold-500/25'}`}
+            >
+              {confirmLabel || 'Confirm'}
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+// ============================================================
+// Main component
+// ============================================================
 export default function PilotAutomation() {
   const [tab, setTab] = useState('dashboard');
   const [health, setHealth] = useState(null);
@@ -82,11 +143,21 @@ export default function PilotAutomation() {
   const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [confirm, setConfirm] = useState(null); // { title, message, confirmLabel, onConfirm, danger }
 
   const mountedRef = useRef(true);
   const inflightRef = useRef(false);
+  const toastTimerRef = useRef(null);
 
-  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; clearTimeout(toastTimerRef.current); }; }, []);
+
+  function showToast(msg, type = 'info') {
+    if (!mountedRef.current) return;
+    setToast({ msg, type });
+    clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => { if (mountedRef.current) setToast(null); }, 3500);
+  }
 
   const refresh = useCallback(async () => {
     if (inflightRef.current) return;
@@ -125,11 +196,115 @@ export default function PilotAutomation() {
     }
   }, []);
 
-  // Single polling interval, cleaned up on unmount
   useEffect(() => {
     refresh();
     const id = setInterval(refresh, POLL_INTERVAL);
     return () => clearInterval(id);
+  }, [refresh]);
+
+  // ---- Safety: determine if actions are allowed ----
+  // Actions are only allowed when liveMode is false (simulation) or testMode is true.
+  // If liveMode is true, we disable all write actions per Stage 2B safety requirements.
+  const isSimMode = health ? (!health.liveMode && health.testMode) : false;
+  const actionsAllowed = isSimMode;
+
+  // ---- Action handlers ----
+  const handleCreateLead = useCallback(async (payload) => {
+    try {
+      const r = await pilotApi.createLead(payload);
+      showToast(`Lead "${r.lead?.name || 'created'}" — ${r.drafts?.length || 0} drafts generated`, 'success');
+      await refresh();
+      return r;
+    } catch (e) {
+      showToast(e.message || 'Failed to create lead', 'error');
+      throw e;
+    }
+  }, [refresh]);
+
+  const handleApprove = useCallback(async (draft) => {
+    setConfirm({
+      title: 'Approve Draft',
+      message: `Send ${draft.channel} to ${draft.to}? This will trigger the automation engine (simulated in test mode).`,
+      confirmLabel: 'Approve & Send',
+      danger: false,
+      onConfirm: async () => {
+        setConfirm(null);
+        try {
+          await pilotApi.approveDraft(draft.id);
+          showToast(`Draft approved — ${draft.channel} to ${draft.to}`, 'success');
+          await refresh();
+        } catch (e) {
+          showToast(e.message || 'Approval failed', 'error');
+        }
+      },
+    });
+  }, [refresh]);
+
+  const handleReject = useCallback(async (draft) => {
+    setConfirm({
+      title: 'Reject Draft',
+      message: `Reject the ${draft.channel} draft to ${draft.to}? This cannot be undone.`,
+      confirmLabel: 'Reject',
+      danger: true,
+      onConfirm: async () => {
+        setConfirm(null);
+        try {
+          await pilotApi.rejectDraft(draft.id);
+          showToast('Draft rejected', 'success');
+          await refresh();
+        } catch (e) {
+          showToast(e.message || 'Reject failed', 'error');
+        }
+      },
+    });
+  }, [refresh]);
+
+  const handleEditDraft = useCallback(async (id, patch) => {
+    try {
+      await pilotApi.editDraft(id, patch);
+      showToast('Draft updated', 'success');
+      await refresh();
+    } catch (e) {
+      showToast(e.message || 'Edit failed', 'error');
+    }
+  }, [refresh]);
+
+  const handleCancelJob = useCallback(async (job) => {
+    setConfirm({
+      title: 'Cancel Job',
+      message: `Cancel the ${job.channel} job to ${job.to}? Status: ${job.status}.`,
+      confirmLabel: 'Cancel Job',
+      danger: true,
+      onConfirm: async () => {
+        setConfirm(null);
+        try {
+          await pilotApi.cancelJob(job.id);
+          showToast('Job cancelled', 'success');
+          await refresh();
+        } catch (e) {
+          showToast(e.message || 'Cancel failed', 'error');
+        }
+      },
+    });
+  }, [refresh]);
+
+  const handleCancelFollowups = useCallback(async (leadId) => {
+    setConfirm({
+      title: 'Cancel Follow-ups',
+      message: `Cancel all scheduled follow-ups for lead …${leadId.slice(-6)}?`,
+      confirmLabel: 'Cancel Follow-ups',
+      danger: true,
+      onConfirm: async () => {
+        setConfirm(null);
+        try {
+          const r = await pilotApi.cancelFollowups(leadId);
+          showToast(`Cancelled ${r.cancelled || 0} follow-up(s)`, 'success');
+          await refresh();
+        } catch (e) {
+          showToast(e.message || 'Cancel failed', 'error');
+        }
+      },
+    });
   }, [refresh]);
 
   // ---- Derived data ----
@@ -149,6 +324,9 @@ export default function PilotAutomation() {
 
   return (
     <div className="space-y-5">
+      <Toast toast={toast} />
+      <ConfirmDialog {...(confirm || {})} onCancel={() => setConfirm(null)} />
+
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -174,7 +352,13 @@ export default function PilotAutomation() {
       </div>
 
       {/* Mode banner */}
-      {health && <ModeBanner health={health} />}
+      {health && <ModeBanner health={health} actionsAllowed={actionsAllowed} />}
+      {!health && !loading && (
+        <div className="flex items-center gap-2 ml-auto px-3 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
+          <ShieldAlert className="w-3.5 h-3.5" strokeWidth={1.5} />
+          Actions disabled — waiting for system mode verification.
+        </div>
+      )}
 
       {/* Error */}
       {error && <ErrorState error={error} />}
@@ -211,10 +395,10 @@ export default function PilotAutomation() {
           transition={{ duration: 0.2 }}
         >
           {tab === 'dashboard' && <DashboardTab health={health} leads={leads} pendingDrafts={pendingDrafts} scheduledItems={scheduledItems} jobs={jobs} sentJobs={sentJobs} failedJobs={failedJobs} />}
-          {tab === 'leads' && <LeadsTab leads={leads} />}
-          {tab === 'approvals' && <ApprovalsTab drafts={drafts} pendingDrafts={pendingDrafts} />}
-          {tab === 'scheduled' && <ScheduledTab scheduler={scheduler} scheduledItems={scheduledItems} />}
-          {tab === 'history' && <HistoryTab jobs={jobs} />}
+          {tab === 'leads' && <LeadsTab leads={leads} actionsAllowed={actionsAllowed} onCreateLead={handleCreateLead} showToast={showToast} />}
+          {tab === 'approvals' && <ApprovalsTab drafts={drafts} pendingDrafts={pendingDrafts} actionsAllowed={actionsAllowed} onApprove={handleApprove} onReject={handleReject} onEdit={handleEditDraft} showToast={showToast} />}
+          {tab === 'scheduled' && <ScheduledTab scheduler={scheduler} scheduledItems={scheduledItems} actionsAllowed={actionsAllowed} onCancelFollowups={handleCancelFollowups} />}
+          {tab === 'history' && <HistoryTab jobs={jobs} actionsAllowed={actionsAllowed} onCancelJob={handleCancelJob} />}
           {tab === 'conversations' && <ConversationsTab conversations={conversations} />}
           {tab === 'calls' && <CallsTab calls={calls} />}
           {tab === 'webhooks' && <WebhooksTab webhookHealth={webhookHealth} optouts={optouts} />}
@@ -225,9 +409,9 @@ export default function PilotAutomation() {
 }
 
 // ============================================================
-// Mode Banner
+// Mode Banner (with safety warning)
 // ============================================================
-function ModeBanner({ health }) {
+function ModeBanner({ health, actionsAllowed }) {
   const live = health.liveMode;
   return (
     <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm
@@ -239,6 +423,14 @@ function ModeBanner({ health }) {
       </span>
       {(health.configIssues || []).length > 0 && (
         <span className="text-rose-400/80">⚠ {health.configIssues.join('; ')}</span>
+      )}
+      {!actionsAllowed && (
+        <div className="flex items-center gap-2 ml-auto px-3 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
+          <ShieldAlert className="w-3.5 h-3.5" strokeWidth={1.5} />
+          {health.liveMode
+            ? 'Actions disabled — live mode is active.'
+            : 'Actions disabled — simulation/test mode is not enabled.'}
+        </div>
       )}
     </div>
   );
@@ -264,7 +456,6 @@ function DashboardTab({ health, leads, pendingDrafts, scheduledItems, jobs, sent
 
   return (
     <div className="space-y-5">
-      {/* Metrics grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         {metrics.map(m => {
           const Icon = m.icon;
@@ -281,8 +472,6 @@ function DashboardTab({ health, leads, pendingDrafts, scheduledItems, jobs, sent
           );
         })}
       </div>
-
-      {/* Provider status */}
       {health && (
         <div className="p-4 rounded-xl bg-surface-100/80 border border-white/[0.05]">
           <h3 className="text-sm font-semibold text-white/70 mb-3">Provider Status</h3>
@@ -312,59 +501,202 @@ function ProviderStatus({ label, ok, detail }) {
 }
 
 // ============================================================
-// Leads Tab — read-only
+// Leads Tab — with creation form
 // ============================================================
-function LeadsTab({ leads }) {
-  if (!leads.length) return <EmptyState label="No leads yet" />;
+function LeadsTab({ leads, actionsAllowed, onCreateLead, showToast }) {
+  const [showForm, setShowForm] = useState(false);
+  if (!actionsAllowed && !leads.length) return <EmptyState label="No leads yet — switch to simulation mode to create leads" />;
   return (
-    <div className="space-y-2">
-      <ComingSoon label="Lead creation coming in the next stage" />
-      {leads.map(l => (
-        <div key={l.id} className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl bg-surface-100/60 border border-white/[0.04]">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-white/90">{l.name || '(no name)'}</span>
-              <StatusBadge status={l.status} />
-            </div>
-            <div className="text-xs text-white/40 mt-0.5">
-              {l.phone || '—'} · {l.email || '—'} · {l.source}
-            </div>
-          </div>
-          <div className="text-xs text-white/30 text-right whitespace-nowrap">
-            {l.businessName}<br />{fmtTime(l.createdAt)}
-          </div>
+    <div className="space-y-3">
+      {actionsAllowed && (
+        <LeadForm
+          open={showForm}
+          onToggle={() => setShowForm(s => !s)}
+          onCreate={onCreateLead}
+          showToast={showToast}
+        />
+      )}
+      {!actionsAllowed && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-rose-500/5 border border-rose-500/15 text-xs text-rose-400">
+          <ShieldAlert className="w-3.5 h-3.5" strokeWidth={1.5} />
+          Lead creation disabled — live mode is active
         </div>
-      ))}
+      )}
+      {!leads.length ? (
+        <EmptyState label="No leads yet" />
+      ) : (
+        leads.map(l => (
+          <div key={l.id} className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl bg-surface-100/60 border border-white/[0.04]">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-white/90">{l.name || '(no name)'}</span>
+                <StatusBadge status={l.status} />
+              </div>
+              <div className="text-xs text-white/40 mt-0.5">
+                {l.phone || '—'} · {l.email || '—'} · {l.source}
+              </div>
+            </div>
+            <div className="text-xs text-white/30 text-right whitespace-nowrap">
+              {l.businessName}<br />{fmtTime(l.createdAt)}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+function LeadForm({ open, onToggle, onCreate, showToast }) {
+  const [form, setForm] = useState({ name: '', businessName: '', phone: '', email: '', notes: '', source: 'website_form' });
+  const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+
+  function validate() {
+    const e = {};
+    const name = form.name.trim();
+    const phone = form.phone.trim();
+    const email = form.email.trim();
+    if (!name && !phone && !email) e._ = 'At least name, phone, or email is required';
+    if (phone && !/^\+?[\d\s()-]{7,}$/.test(phone)) e.phone = 'Invalid phone format (e.g. +15551234567)';
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'Invalid email format';
+    return e;
+  }
+
+  async function handleSubmit(ev) {
+    ev.preventDefault();
+    const e = validate();
+    setErrors(e);
+    if (Object.keys(e).length) return;
+    setSubmitting(true);
+    try {
+      const payload = {
+        name: form.name.trim() || undefined,
+        businessName: form.businessName.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+        email: form.email.trim() || undefined,
+        notes: form.notes.trim() || undefined,
+        source: form.source.trim() || 'website_form',
+      };
+      await onCreate(payload);
+      setForm({ name: '', businessName: '', phone: '', email: '', notes: '', source: 'website_form' });
+      onToggle(); // close form
+    } catch {
+      // error already shown via toast
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={onToggle}
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gold-500/10 border border-gold-500/20 text-sm text-gold-400 hover:bg-gold-500/15 transition-all"
+      >
+        <Plus className="w-4 h-4" strokeWidth={1.5} />
+        Create Lead
+      </button>
+    );
+  }
+
+  return (
+    <div className="p-4 rounded-xl bg-surface-100/80 border border-white/[0.05]">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-white/80">Create Lead</h3>
+        <button onClick={onToggle} className="text-white/30 hover:text-white/60 transition-all">
+          <X className="w-4 h-4" strokeWidth={1.5} />
+        </button>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        {errors._ && <div className="text-xs text-rose-400">{errors._}</div>}
+        <div className="grid grid-cols-2 gap-3">
+          <FormField label="Name" value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))} placeholder="Jane Doe" />
+          <FormField label="Business" value={form.businessName} onChange={v => setForm(f => ({ ...f, businessName: v }))} placeholder="Acme Corp" />
+          <FormField label="Phone" value={form.phone} onChange={v => setForm(f => ({ ...f, phone: v }))} placeholder="+15551234567" error={errors.phone} />
+          <FormField label="Email" value={form.email} onChange={v => setForm(f => ({ ...f, email: v }))} placeholder="jane@example.com" error={errors.email} />
+        </div>
+        <FormField label="Notes" value={form.notes} onChange={v => setForm(f => ({ ...f, notes: v }))} placeholder="Customer inquiry about…" textarea />
+        <FormField label="Source" value={form.source} onChange={v => setForm(f => ({ ...f, source: v }))} placeholder="website_form" />
+        <div className="flex gap-2 pt-1">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gold-500/15 text-gold-400 text-sm font-medium hover:bg-gold-500/25 transition-all disabled:opacity-40"
+          >
+            {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} /> : <Plus className="w-3.5 h-3.5" strokeWidth={1.5} />}
+            {submitting ? 'Creating…' : 'Create Lead'}
+          </button>
+          <button type="button" onClick={onToggle} className="px-4 py-2 rounded-lg text-sm text-white/50 hover:text-white/80 hover:bg-white/[0.04] transition-all">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function FormField({ label, value, onChange, placeholder, error, textarea }) {
+  return (
+    <div>
+      <label className="block text-xs text-white/40 mb-1">{label}</label>
+      {textarea ? (
+        <textarea
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          rows={2}
+          className="modal-input"
+        />
+      ) : (
+        <input
+          type="text"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="modal-input"
+        />
+      )}
+      {error && <div className="text-xs text-rose-400 mt-1">{error}</div>}
     </div>
   );
 }
 
 // ============================================================
-// Approvals Tab — read-only pending drafts
+// Approvals Tab — with approve/reject/edit controls
 // ============================================================
-function ApprovalsTab({ drafts, pendingDrafts }) {
+function ApprovalsTab({ drafts, pendingDrafts, actionsAllowed, onApprove, onReject, onEdit, showToast }) {
+  const [editingId, setEditingId] = useState(null);
+
+  if (!actionsAllowed) {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-rose-500/5 border border-rose-500/15 text-xs text-rose-400">
+          <ShieldAlert className="w-3.5 h-3.5" strokeWidth={1.5} />
+          Approve / reject / edit disabled — live mode is active
+        </div>
+        <DraftsList drafts={drafts} pendingDrafts={pendingDrafts} readOnly />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2">
-      <ComingSoon label="Approve / reject / edit controls coming in the next stage" />
       {!pendingDrafts.length ? (
         <EmptyState label="No pending drafts" />
       ) : (
         pendingDrafts.map(d => (
-          <div key={d.id} className="px-4 py-3 rounded-xl bg-surface-100/60 border border-white/[0.04]">
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <div className="flex items-center gap-2">
-                <ChannelIcon channel={d.channel} />
-                <span className="text-sm font-medium text-white/90">{d.to}</span>
-                <StatusBadge status={d.status} />
-              </div>
-              <span className="text-xs text-white/30">{fmtTime(d.createdAt)}</span>
-            </div>
-            {d.subject && <div className="text-xs text-white/50 mb-1">Subject: {d.subject}</div>}
-            <div className="text-xs text-white/60 bg-white/[0.02] rounded-lg p-2.5 max-h-24 overflow-y-auto scrollable whitespace-pre-wrap">{d.body}</div>
-          </div>
+          <DraftCard
+            key={d.id}
+            draft={d}
+            onApprove={() => onApprove(d)}
+            onReject={() => onReject(d)}
+            onEdit={(patch) => onEdit(d.id, patch)}
+            isEditing={editingId === d.id}
+            setEditing={(v) => setEditingId(v ? d.id : null)}
+            showToast={showToast}
+          />
         ))
       )}
-      {/* Also show approved/rejected drafts for context */}
       {drafts.filter(d => d.status !== 'pending').length > 0 && (
         <div className="pt-3">
           <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Processed Drafts</h3>
@@ -383,13 +715,134 @@ function ApprovalsTab({ drafts, pendingDrafts }) {
   );
 }
 
+function DraftsList({ drafts, pendingDrafts, readOnly }) {
+  return (
+    <>
+      {!pendingDrafts.length ? <EmptyState label="No pending drafts" /> : (
+        pendingDrafts.map(d => (
+          <div key={d.id} className="px-4 py-3 rounded-xl bg-surface-100/60 border border-white/[0.04]">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-2">
+                <ChannelIcon channel={d.channel} />
+                <span className="text-sm font-medium text-white/90">{d.to}</span>
+                <StatusBadge status={d.status} />
+              </div>
+              <span className="text-xs text-white/30">{fmtTime(d.createdAt)}</span>
+            </div>
+            {d.subject && <div className="text-xs text-white/50 mb-1">Subject: {d.subject}</div>}
+            <div className="text-xs text-white/60 bg-white/[0.02] rounded-lg p-2.5 max-h-24 overflow-y-auto scrollable whitespace-pre-wrap">{d.body}</div>
+          </div>
+        ))
+      )}
+    </>
+  );
+}
+
+function DraftCard({ draft, onApprove, onReject, onEdit, isEditing, setEditing, showToast }) {
+  const [editBody, setEditBody] = useState(draft.body);
+  const [editSubject, setEditSubject] = useState(draft.subject);
+  const [busy, setBusy] = useState(false);
+
+  async function handleSaveEdit() {
+    setBusy(true);
+    try {
+      await onEdit({ body: editBody.trim(), subject: draft.channel === 'email' ? editSubject.trim() : undefined });
+      setEditing(false);
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <div className="px-4 py-3 rounded-xl bg-surface-100/60 border border-white/[0.04]">
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <div className="flex items-center gap-2">
+          <ChannelIcon channel={draft.channel} />
+          <span className="text-sm font-medium text-white/90">{draft.to}</span>
+          <StatusBadge status={draft.status} />
+        </div>
+        <span className="text-xs text-white/30">{fmtTime(draft.createdAt)}</span>
+      </div>
+
+      {isEditing ? (
+        <div className="space-y-2">
+          {draft.channel === 'email' && (
+            <input
+              type="text"
+              value={editSubject}
+              onChange={e => setEditSubject(e.target.value)}
+              placeholder="Subject"
+              className="modal-input"
+            />
+          )}
+          <textarea
+            value={editBody}
+            onChange={e => setEditBody(e.target.value)}
+            rows={4}
+            className="modal-input"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleSaveEdit}
+              disabled={busy}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold-500/15 text-gold-400 text-xs font-medium hover:bg-gold-500/25 transition-all disabled:opacity-40"
+            >
+              {busy ? <Loader2 className="w-3 h-3 animate-spin" strokeWidth={1.5} /> : <CheckCircle2 className="w-3 h-3" strokeWidth={1.5} />}
+              Save
+            </button>
+            <button
+              onClick={() => { setEditing(false); setEditBody(draft.body); setEditSubject(draft.subject); }}
+              className="px-3 py-1.5 rounded-lg text-xs text-white/50 hover:text-white/80 hover:bg-white/[0.04] transition-all"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {draft.subject && <div className="text-xs text-white/50 mb-1">Subject: {draft.subject}</div>}
+          <div className="text-xs text-white/60 bg-white/[0.02] rounded-lg p-2.5 max-h-24 overflow-y-auto scrollable whitespace-pre-wrap">{draft.body}</div>
+          <div className="flex gap-2 mt-2.5">
+            <button
+              onClick={onApprove}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-400 text-xs font-medium hover:bg-emerald-500/25 transition-all"
+            >
+              <Send className="w-3 h-3" strokeWidth={1.5} />
+              Approve & Send
+            </button>
+            <button
+              onClick={onReject}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/15 text-rose-400 text-xs font-medium hover:bg-rose-500/25 transition-all"
+            >
+              <X className="w-3 h-3" strokeWidth={1.5} />
+              Reject
+            </button>
+            <button
+              onClick={() => setEditing(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] text-white/60 text-xs font-medium hover:bg-white/[0.08] transition-all"
+            >
+              <Edit3 className="w-3 h-3" strokeWidth={1.5} />
+              Edit
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ============================================================
-// Scheduled Tab — read-only
+// Scheduled Tab — with cancel follow-ups
 // ============================================================
-function ScheduledTab({ scheduler, scheduledItems }) {
+function ScheduledTab({ scheduler, scheduledItems, actionsAllowed, onCancelFollowups }) {
+  // Group scheduled items by leadId so we can show one cancel button per lead
+  const byLead = {};
+  for (const s of scheduledItems) {
+    if (!byLead[s.leadId]) byLead[s.leadId] = [];
+    byLead[s.leadId].push(s);
+  }
+  const leadIds = Object.keys(byLead);
+
   return (
     <div className="space-y-2">
-      <ComingSoon label="Cancel follow-up controls coming in the next stage" />
       {scheduler?.status && (
         <div className="flex items-center gap-4 px-4 py-2.5 rounded-lg bg-white/[0.02] border border-white/[0.04] text-xs text-white/40">
           <span>Scheduled: <strong className="text-white/70">{scheduler.status.scheduled}</strong></span>
@@ -401,16 +854,29 @@ function ScheduledTab({ scheduler, scheduledItems }) {
       {!scheduledItems.length ? (
         <EmptyState label="Nothing scheduled" />
       ) : (
-        scheduledItems.map(s => (
-          <div key={s.id} className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl bg-surface-100/60 border border-white/[0.04]">
-            <div className="flex items-center gap-3">
-              <ChannelIcon channel={s.channel} />
-              <div>
-                <div className="text-sm text-white/80">Lead …{s.leadId?.slice(-6)}</div>
-                <div className="text-xs text-white/40">Run at {fmtTime(s.runAt)}</div>
-              </div>
+        leadIds.map(lid => (
+          <div key={lid} className="px-4 py-3 rounded-xl bg-surface-100/60 border border-white/[0.04]">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="text-sm text-white/80">Lead …{lid?.slice(-6)}</div>
+              {actionsAllowed && (
+                <button
+                  onClick={() => onCancelFollowups(lid)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 text-xs hover:bg-rose-500/20 transition-all"
+                >
+                  <Ban className="w-3 h-3" strokeWidth={1.5} />
+                  Cancel Follow-ups
+                </button>
+              )}
             </div>
-            <StatusBadge status={s.status} />
+            <div className="space-y-1">
+              {byLead[lid].map(s => (
+                <div key={s.id} className="flex items-center gap-3 text-xs text-white/40 pl-2">
+                  <ChannelIcon channel={s.channel} />
+                  <span>Run at {fmtTime(s.runAt)}</span>
+                  <StatusBadge status={s.status} />
+                </div>
+              ))}
+            </div>
           </div>
         ))
       )}
@@ -419,32 +885,45 @@ function ScheduledTab({ scheduler, scheduledItems }) {
 }
 
 // ============================================================
-// History Tab — read-only job list
+// History Tab — with cancel job
 // ============================================================
-function HistoryTab({ jobs }) {
+function HistoryTab({ jobs, actionsAllowed, onCancelJob }) {
   return (
     <div className="space-y-2">
-      <ComingSoon label="Cancel job controls coming in the next stage" />
       {!jobs.length ? (
         <EmptyState label="No jobs yet" />
       ) : (
-        jobs.slice(0, 20).map(j => (
-          <div key={j.id} className="px-4 py-3 rounded-xl bg-surface-100/60 border border-white/[0.04]">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <ChannelIcon channel={j.channel} />
-                <span className="text-sm text-white/80">{j.to}</span>
-                <StatusBadge status={j.status} />
+        jobs.slice(0, 20).map(j => {
+          const canCancel = actionsAllowed && CANCELLABLE_JOB_STATUSES.includes(j.status);
+          return (
+            <div key={j.id} className="px-4 py-3 rounded-xl bg-surface-100/60 border border-white/[0.04]">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <ChannelIcon channel={j.channel} />
+                  <span className="text-sm text-white/80">{j.to}</span>
+                  <StatusBadge status={j.status} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-white/30">{fmtTime(j.createdAt)}</span>
+                  {canCancel && (
+                    <button
+                      onClick={() => onCancelJob(j)}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 text-xs hover:bg-rose-500/20 transition-all"
+                    >
+                      <Ban className="w-3 h-3" strokeWidth={1.5} />
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </div>
-              <span className="text-xs text-white/30">{fmtTime(j.createdAt)}</span>
+              <div className="text-xs text-white/40 mt-1 flex items-center gap-3">
+                {j.externalId && <span>ext: {j.externalId.slice(0, 14)}…</span>}
+                {j.attempts > 0 && <span>attempts: {j.attempts}</span>}
+                {j.lastError && <span className="text-rose-400/70">err: {j.lastError}</span>}
+              </div>
             </div>
-            <div className="text-xs text-white/40 mt-1 flex items-center gap-3">
-              {j.externalId && <span>ext: {j.externalId.slice(0, 14)}…</span>}
-              {j.attempts > 0 && <span>attempts: {j.attempts}</span>}
-              {j.lastError && <span className="text-rose-400/70">err: {j.lastError}</span>}
-            </div>
-          </div>
-        ))
+          );
+        })
       )}
     </div>
   );
@@ -502,7 +981,6 @@ function CallsTab({ calls }) {
 function WebhooksTab({ webhookHealth, optouts }) {
   return (
     <div className="space-y-4">
-      {/* Webhook endpoints */}
       {webhookHealth ? (
         <div className="p-4 rounded-xl bg-surface-100/80 border border-white/[0.05]">
           <h3 className="text-sm font-semibold text-white/70 mb-3">Webhook Endpoints</h3>
@@ -532,7 +1010,6 @@ function WebhooksTab({ webhookHealth, optouts }) {
         </div>
       ) : <EmptyState label="Webhook health unavailable" />}
 
-      {/* Opt-outs */}
       <div>
         <h3 className="text-sm font-semibold text-white/70 mb-2">Opt-Out Registry</h3>
         {!optouts.length ? (

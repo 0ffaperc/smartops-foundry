@@ -94,6 +94,38 @@ export const pilotApi = {
   getWebhookHealth(signal) {
     return request('/webhooks/health', { signal });
   },
+
+  // ---- Write endpoints (Stage 2B — simulation mode only) ----
+
+  /** POST /api/pilot/leads — create lead + AI drafts */
+  createLead(payload, signal) {
+    return request('/leads', { method: 'POST', body: payload, signal });
+  },
+
+  /** POST /api/pilot/drafts/:id/approve — approve draft → engine sends (or simulates) */
+  approveDraft(id, signal) {
+    return request(`/drafts/${id}/approve`, { method: 'POST', signal });
+  },
+
+  /** POST /api/pilot/drafts/:id/reject — reject draft */
+  rejectDraft(id, signal) {
+    return request(`/drafts/${id}/reject`, { method: 'POST', signal });
+  },
+
+  /** PUT /api/pilot/drafts/:id — edit draft body/subject (only if status === 'pending') */
+  editDraft(id, patch, signal) {
+    return request(`/drafts/${id}`, { method: 'PUT', body: patch, signal });
+  },
+
+  /** POST /api/pilot/jobs/:id/cancel — cancel a pending/approved job */
+  cancelJob(id, signal) {
+    return request(`/jobs/${id}/cancel`, { method: 'POST', signal });
+  },
+
+  /** POST /api/pilot/scheduler/cancel/:leadId — cancel all scheduled follow-ups for a lead */
+  cancelFollowups(leadId, signal) {
+    return request(`/scheduler/cancel/${leadId}`, { method: 'POST', signal });
+  },
 };
 
 export default pilotApi;
