@@ -1,11 +1,9 @@
 // ===== AI Ops Agency — Standalone White-Themed App =====
-// Auth guard — redirect to login if no token
+// Stage 3B: Auth guard — check cookie-based session via /api/auth/me
+// (no more localStorage sof_token — session is in an HttpOnly cookie)
 (function() {
-  const token = localStorage.getItem('sof_token');
-  if (!token) {
-    window.location.href = '/login.html';
-    return;
-  }
+  // Quick check: fetch /me to see if we have a valid session
+  // If not, the async loadUser below will redirect to login
 })();
 
 const API = '/api/agency';
@@ -56,30 +54,30 @@ function showToast(msg, type = 'info') {
 // ===== API =====
 async function api(path, opts = {}) {
   try {
-    const r = await fetch(`${API}${path}`, { headers: { 'Content-Type': 'application/json' }, ...opts });
+    const r = await fetch(`${API}${path}`, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts });
+    if (r.status === 401) { window.location.href = '/login.html'; return { ok: false, error: 'Authentication required' }; }
     return await r.json();
   } catch (e) { showToast('Connection error: ' + e.message, 'error'); return { ok: false, error: e.message }; }
 }
 
 // ===== Auth =====
+// Stage 3B: cookie-based session — check /api/auth/me instead of localStorage token
 async function loadUser() {
-  const token = localStorage.getItem('sof_token');
-  if (!token) { window.location.href = '/login.html'; return; }
   try {
-    const r = await fetch(`${AUTH_API}/verify`, { headers: { 'X-Auth-Token': token } });
+    const r = await fetch(`${AUTH_API}/me`, { credentials: 'include' });
     const data = await r.json();
-    if (data.ok) {
+    if (data.ok && data.user) {
       const u = data.user;
       document.getElementById('userName').textContent = u.name || u.email;
       document.getElementById('userPlan').textContent = (u.plan || 'starter') + ' plan';
       document.getElementById('userAvatar').textContent = (u.name || u.email || '?').charAt(0).toUpperCase();
     } else {
-      localStorage.removeItem('sof_token');
+      localStorage.removeItem('sof_token'); // clean up stale token if present
       localStorage.removeItem('sof_user');
       window.location.href = '/login.html';
     }
   } catch (e) {
-    // Non-fatal — app still works
+    // Non-fatal — app may still work for some operations
     const saved = localStorage.getItem('sof_user');
     if (saved) {
       try {
@@ -93,10 +91,8 @@ async function loadUser() {
 }
 
 function logout() {
-  const token = localStorage.getItem('sof_token');
-  if (token) {
-    fetch(`${AUTH_API}/logout`, { method: 'POST', headers: { 'X-Auth-Token': token } }).catch(()=>{});
-  }
+  // Stage 3B: logout via cookie — server deletes session, clears cookie
+  fetch(`${AUTH_API}/logout`, { method: 'POST', credentials: 'include' }).catch(()=>{});
   localStorage.removeItem('sof_token');
   localStorage.removeItem('sof_user');
   window.location.href = '/login.html';

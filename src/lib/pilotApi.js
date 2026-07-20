@@ -1,6 +1,7 @@
 // pilotApi.js — Centralized API client for the Automation Pilot.
 // Uses relative /api/pilot/* URLs (routed via Vite proxy to port 8787).
-// No credentials, no live-send logic. Easy to extend with auth headers later.
+// Stage 3B: sends credentials (session cookie) with every request.
+// No credentials in code, no live-send logic. Easy to extend with auth headers later.
 
 const BASE = '/api/pilot';
 
@@ -13,7 +14,10 @@ const BASE = '/api/pilot';
  */
 async function request(path, opts = {}) {
   const url = BASE + path;
-  const fetchOpts = { headers: { 'Content-Type': 'application/json', ...opts.headers } };
+  const fetchOpts = {
+    credentials: 'include',  // Stage 3B: send session cookie
+    headers: { 'Content-Type': 'application/json', ...opts.headers },
+  };
   if (opts.method) fetchOpts.method = opts.method;
   if (opts.body !== undefined) fetchOpts.body = JSON.stringify(opts.body);
   if (opts.signal) fetchOpts.signal = opts.signal;

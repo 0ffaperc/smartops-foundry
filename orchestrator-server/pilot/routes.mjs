@@ -1,5 +1,6 @@
 // pilot/routes.mjs — All REST endpoints + webhooks for the Automation Pilot.
 // Mounted into server.mjs for any path starting with '/api/pilot/' or '/pilot'.
+// Stage 3B: dashboard routes require auth (req.user); webhook routes remain public.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -18,10 +19,31 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 let _workerStarted = false;
 function ensureWorker() { if (!_workerStarted) { startWorker(); _workerStarted = true; } }
 
+// Public webhook paths — these do NOT require dashboard authentication.
+const WEBHOOK_PATHS = new Set([
+  '/api/pilot/sms/webhook',
+  '/api/pilot/voice/incoming',
+  '/api/pilot/voice/status',
+  '/api/pilot/email/webhook',
+]);
+
+// Dashboard routes that require authentication (everything except webhooks).
+function isDashboardRoute(pathname) {
+  return pathname.startsWith('/api/pilot/') && !WEBHOOK_PATHS.has(pathname);
+}
+
 // ---- helpers (self-contained so this module is portable) ----
 function send(res, status, obj, headers = {}) {
-  res.writeHead(status, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, GET, PUT, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type', ...headers });
+  res.writeHead(status, { 'Content-Type': 'application/json', 'Access-Control-Allow-Methods': 'POST, GET, PUT, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Cookie', ...headers });
   res.end(JSON.stringify(obj));
+}
+function sendAuthFail(res) {
+  res.writeHead(401, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ ok: false, error: 'Authentication required' }));
+}
+function sendRedirect(res, location) {
+  res.writeHead(302, { 'Location': location, 'Content-Type': 'text/html' });
+  res.end(`<html><body>Redirecting to <a href="${location}">${location}</a></body></html>`);
 }
 function readBody(req) {
   return new Promise((resolve) => {
@@ -42,6 +64,7 @@ function validateEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e ||
 
 // ---- main mount ----
 // Returns true if the request was handled (caller should return), false otherwise.
+// req.user is attached by the auth middleware in server.mjs (or null if unauthenticated).
 export async function mountPilotRoutes(req, res) {
   if (req.method === 'OPTIONS') { send(res, 204, {}); return true; }
   const url = new URL(req.url, 'http://localhost');
@@ -49,7 +72,9 @@ export async function mountPilotRoutes(req, res) {
   ensureWorker();
 
   // ---- Pilot HTML page (self-contained, no Vite needed) ----
+  // Stage 3B: requires authentication — redirect to /login.html if unauthenticated.
   if ((req.method === 'GET') && (p === '/pilot' || p === '/pilot.html')) {
+    if (!req.user) { sendRedirect(res, '/login.html?redirect=/pilot'); return true; }
     const html = readFileSync(join(__dirname, 'pilot.html'), 'utf-8');
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(html);
@@ -57,6 +82,12 @@ export async function mountPilotRoutes(req, res) {
   }
 
   if (!p.startsWith('/api/pilot/')) return false;
+
+  // ---- Auth gate: dashboard routes require authentication; webhooks stay public ----
+  if (isDashboardRoute(p)) {
+    if (!req.user) { sendAuthFail(res); return true; }
+  }
+
   const segs = p.split('/').filter(Boolean); // ['api','pilot',...rest]
   // Read raw body ONCE for POST/PUT. JSON routes parse it; webhook routes use raw.
   // (Reading twice would hang — the second reader never sees 'end'.)
