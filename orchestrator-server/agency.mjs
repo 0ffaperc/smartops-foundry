@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 
-const AGENCY_DIR = 'C:/Users/shahe/AppData/Local/hermes/agency-data';
+const AGENCY_DIR = process.env.AGENCY_DATA_DIR || join(process.cwd(), 'agency-data');
 const CLIENTS_DIR = join(AGENCY_DIR, 'clients');
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OR_KEY = process.env.OPENROUTER_API_KEY || '';

@@ -12,6 +12,7 @@ import ModelStudy from './screens/ModelStudy';
 import TradingJournal from './screens/TradingJournal';
 import PercJrTools from './screens/PercJrTools';
 import AgencyOps from './screens/AgencyOps';
+import PilotAutomation from './screens/PilotAutomation';
 import ClipBuilder from './screens/ClipBuilder';
 import DailyReview from './screens/DailyReview';
 import WeeklyReview from './screens/WeeklyReview';
@@ -36,6 +37,7 @@ const SCREENS = {
   tradingJournal: { component: TradingJournal, label: 'Trading Journal', icon: 'NotebookPen' },
   percJrTools: { component: PercJrTools, label: 'Perc Jr. Tools', icon: 'Sparkles' },
   agencyOps: { component: AgencyOps, label: 'Agency Ops', icon: 'Building2' },
+  pilotAutomation: { component: PilotAutomation, label: 'Automation Pilot', icon: 'Zap' },
   clipBuilder: { component: ClipBuilder, label: 'Clip Builder', icon: 'Youtube' },
   planner: { component: Planner, label: 'Planner', icon: 'Brain' },
   dailyReview: { component: DailyReview, label: 'Daily Review', icon: 'FileText' },

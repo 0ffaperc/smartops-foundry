@@ -13,6 +13,8 @@ import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join as pathJoin, dirname } from 'node:path';
+// Stage 3B: auth module — cookie sessions, scrypt hashing, rate limiting, CORS
+import { attachAuth, requireAuth, applyCORS, readBodyWithLimit, readRawWithLimit, BodyTooLargeError, handleAuthRoutes, MAX_BODY_BYTES, pruneExpiredSessions } from './auth/index.mjs';
 import { createHash, randomBytes, createHmac } from 'node:crypto';
 
 const PORT = 8787;
@@ -31,8 +33,8 @@ function pickModel(mode) {
   return FAST_MODEL;
 }
 
-const HERMES = process.env.HERMES_BIN ||
-  'C:/Users/shahe/AppData/Local/hermes/hermes-agent/venv/Scripts/hermes';
+// Hermes binary — configurable via env. Default to PATH lookup ('hermes').
+const HERMES = process.env.HERMES_BIN || 'hermes';
 
 // ---- LifeOS context --------------------------------------------------------
 function buildContext(appState = {}, today) {
@@ -206,29 +208,54 @@ function scoreTweets(tweets, limit = 20) {
     };
   }).sort((a, b) => b.viralScore - a.viralScore).slice(0, limit);
 }
-function send(res, status, obj) {
+function send(res, status, obj, headers = {}) {
   res.writeHead(status, {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    ...headers,
   });
   res.end(JSON.stringify(obj));
 }
 
 const server = createServer(async (req, res) => {
-  if (req.method === 'OPTIONS') { send(res, 204, {}); return; }
+  // Stage 3B: attach auth context (req.user) from session cookie on every request
+  await attachAuth(req, res);
+
+  if (req.method === 'OPTIONS') {
+    const corsHeaders = applyCORS(req, res, { 'Access-Control-Allow-Methods': 'POST, GET, PUT, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Cookie' });
+    res.writeHead(204, corsHeaders);
+    res.end();
+    return;
+  }
 
   if (req.method === 'GET' && req.url === '/health') {
     send(res, 200, { ok: true, fastModel: FAST_MODEL, smartModel: SMART_MODEL, lowCredit: LOW_CREDIT, hasKey: !!OPENROUTER_KEY });
     return;
   }
 
-  // ---- Agency Ops data (Summit Air demo) ----------------------------------
+  // ---- Auth routes (/api/auth/*) — handled by auth module ----
+  const authUrl = new URL(req.url, 'http://localhost');
+  if (authUrl.pathname.startsWith('/api/auth/')) {
+    const handled = await handleAuthRoutes(req, res, authUrl);
+    if (handled) return;
+  }
+
+  // ---- Automation Pilot (/api/pilot/* and /pilot) ----
+  try {
+    const { mountPilotRoutes } = await import('./pilot/routes.mjs');
+    if (await mountPilotRoutes(req, res)) return;
+  } catch (e) {
+    // fail open: pilot errors must not break the rest of the server
+    if (req.url.startsWith('/api/pilot/') || req.url === '/pilot' || req.url === '/pilot.html') {
+      send(res, 500, { ok: false, error: 'pilot module error: ' + String(e) });
+      return;
+    }
+  }
+
+// ---- Agency Ops data (Summit Air demo) ----------------------------------
   // Serves the local CRM + calendar JSON so the AgencyOps screen can render
   // live data without bundling it into the frontend.
   if (req.method === 'GET' && req.url === '/api/agency-data') {
-    const AGENCY_DIR = 'C:/Users/shahe/AppData/Local/hermes/agency-data';
+    const AGENCY_DIR = process.env.AGENCY_DATA_DIR || pathJoin(process.cwd(), 'agency-data');
     try {
       const crmPath = pathJoin(AGENCY_DIR, 'summit-air-crm.json');
       const calPath = pathJoin(AGENCY_DIR, 'summit-air-calendar.json');
@@ -244,9 +271,11 @@ const server = createServer(async (req, res) => {
   // ---- MULTI-TENANT AGENCY AUTOMATION (unlimited clients, per-client SMS+email) ----
   const agencyUrl = new URL(req.url, 'http://localhost');
   if (agencyUrl.pathname.startsWith('/api/agency/')) {
+    // Stage 3B: require authentication for all agency routes
+    if (!requireAuth(req, res)) return;
     const agency = await import('./agency.mjs');
     const sendMod = await import('./agency-send.mjs');
-    const body = (req.method === 'POST' || req.method === 'PUT') ? await readBody(req) : {};
+    const body = (req.method === 'POST' || req.method === 'PUT') ? await readBodyWithLimit(req) : {};
     const p = agencyUrl.pathname;
     const segs = p.split('/').filter(Boolean); // ['api','agency',...rest]
 
@@ -1079,116 +1108,10 @@ Sort the array by score descending. Output the top 8 results.`;
     return;
   }
 
-  // ---- AUTH SYSTEM -------------------------------------------------------
-  const authUrl = new URL(req.url, 'http://localhost');
-  if (authUrl.pathname.startsWith('/api/auth/')) {
-    const AGENCY_DIR_AUTH = 'C:/Users/shahe/AppData/Local/hermes/agency-data';
-    const authFile = pathJoin(AGENCY_DIR_AUTH, 'auth-users.json');
-    const sessionsFile = pathJoin(AGENCY_DIR_AUTH, 'auth-sessions.json');
-
-    // Ensure dir exists
-    try { mkdirSync(AGENCY_DIR_AUTH, { recursive: true }); } catch {}
-
-    // Helper: read/write users
-    function readUsers() {
-      try { return JSON.parse(readFileSync(authFile, 'utf-8')); } catch { return { users: [] }; }
-    }
-    function writeUsers(data) {
-      writeFileSync(authFile, JSON.stringify(data, null, 2));
-    }
-    function readSessions() {
-      try { return JSON.parse(readFileSync(sessionsFile, 'utf-8')); } catch { return {}; }
-    }
-    function writeSessions(data) {
-      writeFileSync(sessionsFile, JSON.stringify(data, null, 2));
-    }
-    function hashPassword(pw) {
-      return createHash('sha256').update(pw + 'sof-salt-2026').digest('hex');
-    }
-    function makeToken() {
-      return randomBytes(32).toString('hex');
-    }
-
-    // POST /api/auth/signup
-    if (req.method === 'POST' && authUrl.pathname === '/api/auth/signup') {
-      const body = await readBody(req);
-      const { name, email, password, business, plan } = body;
-      if (!name || !email || !password || !business) {
-        send(res, 400, { ok: false, error: 'All fields are required' });
-        return;
-      }
-      const data = readUsers();
-      if (data.users.find(u => u.email === email)) {
-        send(res, 409, { ok: false, error: 'An account with this email already exists' });
-        return;
-      }
-      const user = {
-        id: 'user-' + Date.now().toString(36),
-        name, email, business, plan: plan || 'starter',
-        passwordHash: hashPassword(password),
-        created: new Date().toISOString(),
-      };
-      data.users.push(user);
-      writeUsers(data);
-      const token = makeToken();
-      const sessions = readSessions();
-      sessions[token] = { userId: user.id, created: Date.now() };
-      writeSessions(sessions);
-      send(res, 200, { ok: true, token, user: { id: user.id, name, email, business, plan: user.plan } });
-      return;
-    }
-
-    // POST /api/auth/login
-    if (req.method === 'POST' && authUrl.pathname === '/api/auth/login') {
-      const body = await readBody(req);
-      const { email, password } = body;
-      if (!email || !password) {
-        send(res, 400, { ok: false, error: 'Email and password are required' });
-        return;
-      }
-      const data = readUsers();
-      const user = data.users.find(u => u.email === email);
-      if (!user || user.passwordHash !== hashPassword(password)) {
-        send(res, 401, { ok: false, error: 'Invalid email or password' });
-        return;
-      }
-      const token = makeToken();
-      const sessions = readSessions();
-      sessions[token] = { userId: user.id, created: Date.now() };
-      writeSessions(sessions);
-      send(res, 200, { ok: true, token, user: { id: user.id, name: user.name, email: user.email, business: user.business, plan: user.plan } });
-      return;
-    }
-
-    // GET /api/auth/verify
-    if (req.method === 'GET' && authUrl.pathname === '/api/auth/verify') {
-      const token = req.headers['x-auth-token'];
-      if (!token) { send(res, 401, { ok: false, error: 'No token' }); return; }
-      const sessions = readSessions();
-      const session = sessions[token];
-      if (!session) { send(res, 401, { ok: false, error: 'Invalid or expired token' }); return; }
-      const data = readUsers();
-      const user = data.users.find(u => u.id === session.userId);
-      if (!user) { send(res, 401, { ok: false, error: 'User not found' }); return; }
-      send(res, 200, { ok: true, user: { id: user.id, name: user.name, email: user.email, business: user.business, plan: user.plan } });
-      return;
-    }
-
-    // POST /api/auth/logout
-    if (req.method === 'POST' && authUrl.pathname === '/api/auth/logout') {
-      const token = req.headers['x-auth-token'];
-      if (token) {
-        const sessions = readSessions();
-        delete sessions[token];
-        writeSessions(sessions);
-      }
-      send(res, 200, { ok: true });
-      return;
-    }
-
-    send(res, 404, { ok: false, error: 'Auth endpoint not found' });
-    return;
-  }
+  // ---- AUTH SYSTEM (Stage 3B: handled by auth module at top of request handler) ----
+  // The old inline auth system (hardcoded path, SHA-256, X-Auth-Token header)
+  // has been replaced by the auth module (cookie sessions, scrypt hashing).
+  // Auth routes are handled early in the request lifecycle — no inline block needed here.
 
   // ===== AUTOMATION LAB: benchmark-driven automation testing =====
 
