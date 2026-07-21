@@ -239,6 +239,26 @@ const server = createServer(async (req, res) => {
     if (handled) return;
   }
 
+  // ---- Chatbot routes (/api/chat/*) ----
+  if (authUrl.pathname.startsWith('/api/chat/')) {
+    try {
+      let chatBody = null;
+      if (req.method === 'POST') {
+        try { chatBody = await readBodyWithLimit(req, 256 * 1024); }
+        catch (e) {
+          if (e instanceof BodyTooLargeError) { send(res, 413, { ok: false, error: 'Body too large' }); return; }
+          throw e;
+        }
+      }
+      const { handleChatRoutes } = await import('./chat.mjs');
+      const handled = await handleChatRoutes(req, res, authUrl, chatBody);
+      if (handled) return;
+    } catch (e) {
+      send(res, 500, { ok: false, error: 'Chat module error: ' + String(e) });
+      return;
+    }
+  }
+
   // ---- Automation Pilot (/api/pilot/* and /pilot) ----
   try {
     const { mountPilotRoutes } = await import('./pilot/routes.mjs');

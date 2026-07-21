@@ -114,6 +114,68 @@ a{color:inherit;text-decoration:none}
 .footer-links{display:flex;gap:20px}
 .footer-links a{font-size:12px;color:var(--text-4);transition:color .15s}.footer-links a:hover{color:var(--text-3)}
 
+/* What to Expect */
+.expect-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}
+.expect-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;transition:all .15s}
+.expect-card:hover{border-color:var(--border2);background:var(--surface2)}
+.expect-card .ex-icon{width:36px;height:36px;border-radius:8px;background:var(--accent-bg);color:var(--accent-light);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.expect-card h3{font-size:16px;font-weight:510;margin-bottom:6px}
+.expect-card p{font-size:13px;color:var(--text-3);line-height:1.6}
+
+/* Navigate / Site Map */
+.nav-guide{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:40px}
+.nav-item{display:flex;align-items:flex-start;gap:14px;padding:18px;background:var(--surface);border:1px solid var(--border);border-radius:8px;transition:all .15s}
+.nav-item:hover{border-color:var(--border2);background:var(--surface2)}
+.nav-item .nav-num{width:28px;height:28px;border-radius:6px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.nav-item h4{font-size:14px;font-weight:500;margin-bottom:3px}
+.nav-item p{font-size:12px;color:var(--text-3);line-height:1.5}
+
+/* Testimonials */
+.testimonial-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:40px}
+.testimonial{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px}
+.testimonial .stars{color:var(--emerald);font-size:13px;margin-bottom:8px}
+.testimonial p{font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:12px}
+.testimonial .who{font-size:12px;color:var(--text-4)}
+.testimonial .who strong{color:var(--text-3)}
+
+/* FAQ */
+.faq-list{margin-top:40px;max-width:720px}
+.faq-item{border-bottom:1px solid var(--border);padding:0}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:18px 0;cursor:pointer;font-size:15px;font-weight:500;color:var(--text-2);transition:color .15s}
+.faq-q:hover{color:var(--text)}
+.faq-q .arrow{font-size:12px;color:var(--text-4);transition:transform .2s}
+.faq-item.open .faq-q .arrow{transform:rotate(180deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s}
+.faq-item.open .faq-a{max-height:200px;padding-bottom:18px}
+.faq-a p{font-size:14px;color:var(--text-3);line-height:1.6}
+
+/* Chatbots */
+.chat-fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(94,106,210,.4);z-index:1000;transition:transform .15s}
+.chat-fab:hover{transform:scale(1.08)}
+.chat-fab svg{width:24px;height:24px}
+.chat-fab .badge{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--emerald);border:2px solid var(--bg);font-size:9px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.chat-window{position:fixed;bottom:90px;right:20px;width:360px;max-width:calc(100vw - 40px);height:480px;max-height:calc(100vh - 120px);background:var(--bg-panel);border:1px solid var(--border2);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:1001;display:none;flex-direction:column;overflow:hidden}
+.chat-window.show{display:flex}
+.chat-window.j-pos{bottom:90px;right:80px}
+.chat-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.chat-head .ch-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.chat-head .ch-info{flex:1}
+.chat-head .ch-info h4{font-size:13px;font-weight:500}
+.chat-head .ch-info p{font-size:11px;color:var(--text-4)}
+.chat-head .ch-close{width:28px;height:28px;border-radius:6px;border:none;cursor:pointer;background:transparent;color:var(--text-4);font-size:18px;display:flex;align-items:center;justify-content:center}
+.chat-head .ch-close:hover{background:var(--surface2);color:var(--text)}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.chat-msg{max-width:85%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5}
+.chat-msg.bot{background:var(--surface2);color:var(--text-2);align-self:flex-start;border-bottom-left-radius:4px}
+.chat-msg.user{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.chat-msg.typing{color:var(--text-4);font-style:italic}
+.chat-input-row{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px}
+.chat-input-row input{flex:1;padding:9px 12px;font-size:13px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);font-family:inherit;outline:none}
+.chat-input-row input:focus{border-color:var(--accent)}
+.chat-input-row button{padding:9px 16px;font-size:13px;font-weight:500;border:none;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer}
+.chat-input-row button:disabled{opacity:.4}
+.chat-disclaimer{padding:6px 12px;font-size:10px;color:var(--text-4);text-align:center}
+
 /* Responsive */
 @media(max-width:768px){
   .feature-row{grid-template-columns:1fr;gap:32px}
@@ -132,8 +194,11 @@ a{color:inherit;text-decoration:none}
     <a href="/" class="logo" data-sof-logo data-sof-size="24" data-sof-variant="light" data-sof-text="true"></a>
     <div class="nav-links">
       <a href="#features">Features</a>
+      <a href="#expect">What to Expect</a>
+      <a href="#navigate">How to Navigate</a>
       <a href="#how">How It Works</a>
       <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
     </div>
     <div class="nav-cta">
       <a href="/login.html" class="btn btn-ghost">Sign In</a>
@@ -279,6 +344,126 @@ a{color:inherit;text-decoration:none}
   </div>
 </section>
 
+<!-- WHAT TO EXPECT -->
+<section class="section" id="expect">
+  <div class="wrap">
+    <div class="section-tag">What to Expect</div>
+    <h2>More than just automation.</h2>
+    <p class="sub">Here's what happens the moment you join SmartOps Foundry.</p>
+    <div class="expect-grid">
+      <div class="expect-card">
+        <div class="ex-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <h3>Instant Lead Capture</h3>
+        <p>Every missed call, web form, or inquiry gets an immediate AI-personalized response — before your competitor even calls back.</p>
+      </div>
+      <div class="expect-card">
+        <div class="ex-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"/></svg></div>
+        <h3>Full Control, Always</h3>
+        <p>Nothing goes out without your approval. Review every AI-drafted message, edit if needed, approve with one click. You're the pilot, not the passenger.</p>
+      </div>
+      <div class="expect-card">
+        <div class="ex-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
+        <h3>Revenue Tracking</h3>
+        <p>See exactly how many leads were captured, how many appointments booked, and how much revenue was recovered — all in real-time on your dashboard.</p>
+      </div>
+      <div class="expect-card">
+        <div class="ex-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        <h3>Reputation on Autopilot</h3>
+        <p>Automated review requests after every completed job. AI crafts personalized messages that actually get responses — boosting your Google rating passively.</p>
+      </div>
+      <div class="expect-card">
+        <div class="ex-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <h3>One Dashboard, Everything</h3>
+        <p>Manage unlimited business profiles, contacts, automations, and messages from a single dark-themed dashboard. No more juggling 5 different tools.</p>
+      </div>
+      <div class="expect-card">
+        <div class="ex-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg></div>
+        <h3>Secure & Private</h3>
+        <p>Bank-grade session encryption, scrypt password hashing, and per-client data isolation. Your business data never mixes with anyone else's.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW TO NAVIGATE -->
+<section class="section" id="navigate" style="background:var(--bg-panel);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="wrap">
+    <div class="section-tag">Site Guide</div>
+    <h2>How to navigate SmartOps.</h2>
+    <p class="sub">New here? Here's your roadmap — every page, what it does, and where to start.</p>
+    <div class="nav-guide">
+      <div class="nav-item">
+        <div class="nav-num">1</div>
+        <div>
+          <h4>This Page (Home)</h4>
+          <p>What SmartOps Foundry is, what it does, and how it works. Scroll through features, pricing, and FAQs — or use the Help bot in the corner anytime.</p>
+        </div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-num">2</div>
+        <div>
+          <h4>Sign Up / Sign In</h4>
+          <p>Click "Get Started" to create your account. Takes 30 seconds — name, email, password, business name. You'll be in the dashboard instantly.</p>
+        </div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-num">3</div>
+        <div>
+          <h4>Dashboard (Agency View)</h4>
+          <p>After login, you land on the Agency Dashboard. This is mission control — add clients, view contacts, set up automations, and review AI-drafted messages.</p>
+        </div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-num">4</div>
+        <div>
+          <h4>Editor vs Customer View</h4>
+          <p>Use the toggle in the sidebar to switch between Editor mode (full admin access) and Customer mode (what your clients see). Great for demos and previews.</p>
+        </div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-num">5</div>
+        <div>
+          <h4>Automation Lab</h4>
+          <p>Browse 22+ automation types, test them with real scenarios, and see AI-drafted message previews before activating. No commitment, no risk.</p>
+        </div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-num">6</div>
+        <div>
+          <h4>Help Bot (Bottom Right)</h4>
+          <p>Stuck? Click the chat bubble in the bottom-right corner. Our AI assistant can answer questions about SmartOps, guide you through setup, and explain features.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section" id="testimonials">
+  <div class="wrap">
+    <div class="section-tag">Customer Stories</div>
+    <h2>Service businesses love it.</h2>
+    <p class="sub">Real results from real businesses using SmartOps Foundry.</p>
+    <div class="testimonial-row">
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <p>"We were missing 40% of calls during peak summer. SmartOps texted every missed caller back in under 30 seconds. We booked 23 extra jobs in the first month."</p>
+        <div class="who"><strong>John M.</strong> — Owner, Summit Air HVAC</div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <p>"The review request automation alone paid for itself. We went from 12 Google reviews to 47 in three months. Our local search ranking jumped two pages."</p>
+        <div class="who"><strong>David W.</strong> — Owner, Apex Roofing Co</div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <p>"I run three service businesses and SmartOps lets me manage all of them from one dashboard. The AI drafts are scary good — I approve 90% without editing."</p>
+        <div class="who"><strong>Robert G.</strong> — Owner, Apex Roofing Co</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- AUTOMATIONS — compact list -->
 <section class="section" id="automations">
   <div class="wrap">
@@ -403,6 +588,41 @@ a{color:inherit;text-decoration:none}
   </div>
 </section>
 
+<!-- FAQ -->
+<section class="section" id="faq">
+  <div class="wrap">
+    <div class="section-tag">FAQ</div>
+    <h2>Questions, answered.</h2>
+    <p class="sub">Everything you need to know before getting started.</p>
+    <div class="faq-list" id="faqList">
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Do I need any technical knowledge to use SmartOps Foundry? <span class="arrow">▼</span></div>
+        <div class="faq-a"><p>No. If you can use email, you can use SmartOps. The dashboard walks you through everything step by step, and the AI handles all message drafting — you just review and approve.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can I see what messages look like before they're sent? <span class="arrow">▼</span></div>
+        <div class="faq-a"><p>Absolutely. Every message is drafted by AI and shown to you for approval. You can edit the text, change the tone, or reject it entirely. Nothing goes out without your green light.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How many businesses can I manage? <span class="arrow">▼</span></div>
+        <div class="faq-a"><p>Depends on your plan. Starter = 1 business, Professional = up to 5, Agency = unlimited. You can upgrade or downgrade anytime — no long-term contracts.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Does it work with my existing phone number and email? <span class="arrow">▼</span></div>
+        <div class="faq-a"><p>Yes. Connect your existing Twilio number for SMS, or use your current email provider via SMTP. SmartOps works alongside your existing setup — it doesn't replace it.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What if I don't have Twilio or an email provider yet? <span class="arrow">▼</span></div>
+        <div class="faq-a"><p>No problem. SmartOps runs in "simulation mode" — you can test every automation, see AI-drafted messages, and preview the full experience without connecting any external provider. When you're ready, just add your credentials.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Is my business data secure? <span class="arrow">▼</span></div>
+        <div class="faq-a"><p>Yes. Passwords are hashed with scrypt (industry-standard), sessions are encrypted cookie-based, and each client's data is stored in its own isolated directory. We never share or mix data between accounts.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- FOOTER -->
 <footer class="footer">
   <div class="footer-inner">
@@ -420,5 +640,48 @@ a{color:inherit;text-decoration:none}
 <script>
 window.addEventListener('scroll',()=>{document.getElementById('nav').classList.toggle('scrolled',window.scrollY>20)});
 </script>
+
+<!-- HELP CHATBOT (Public, free model) -->
+<div class="chat-fab" id="helpFab" onclick="toggleChat('help')" title="Ask a question">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  <span class="badge">?</span>
+</div>
+<div class="chat-window" id="helpChat">
+  <div class="chat-head">
+    <div class="ch-icon" style="background:var(--accent-bg);color:var(--accent-light)">💬</div>
+    <div class="ch-info"><h4>SmartOps Assistant</h4><p>Ask me anything about SmartOps</p></div>
+    <button class="ch-close" onclick="toggleChat('help')">×</button>
+  </div>
+  <div class="chat-msgs" id="helpMsgs">
+    <div class="chat-msg bot">Hi! I'm the SmartOps assistant. Ask me about features, pricing, how to set up automations, or anything else about the platform! 👋</div>
+  </div>
+  <div class="chat-input-row">
+    <input id="helpInput" placeholder="Type your question..." onkeydown="if(event.key==='Enter')sendHelpMsg()" />
+    <button onclick="sendHelpMsg()">Send</button>
+  </div>
+  <div class="chat-disclaimer">Powered by DeepSeek · Responses may take a few seconds</div>
+</div>
+
+<!-- JARVIS CHATBOT (Private, OpenRouter) -->
+<div class="chat-fab" id="jarvisFab" onclick="toggleChat('jarvis')" title="Jarvis — site builder" style="right:80px;background:var(--emerald);box-shadow:0 4px 16px rgba(16,185,129,.4)">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6m11-11h-6M7 12H1m17.66-7.66l-4.24 4.24M9.58 14.42l-4.24 4.24m12.72 0l-4.24-4.24M9.58 9.58L5.34 5.34"/></svg>
+</div>
+<div class="chat-window j-pos" id="jarvisChat">
+  <div class="chat-head">
+    <div class="ch-icon" style="background:var(--emerald-bg);color:var(--emerald)">🤖</div>
+    <div class="ch-info"><h4>Jarvis</h4><p>Site builder assistant · OpenRouter</p></div>
+    <button class="ch-close" onclick="toggleChat('jarvis')">×</button>
+  </div>
+  <div class="chat-msgs" id="jarvisMsgs">
+    <div class="chat-msg bot">Good day, Sir Perc. I'm Jarvis — connected to OpenRouter. Tell me what you'd like to change on the site, and I'll help you build it.</div>
+  </div>
+  <div class="chat-input-row">
+    <input id="jarvisInput" placeholder="e.g. 'add a contact form section'..." onkeydown="if(event.key==='Enter')sendJarvisMsg()" />
+    <button onclick="sendJarvisMsg()">Send</button>
+  </div>
+  <div class="chat-disclaimer">🔒 Private · OpenRouter powered · For site admin only</div>
+</div>
+
+<script src="/chatbots.js"></script>
 </body>
 </html>

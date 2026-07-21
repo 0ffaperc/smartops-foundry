@@ -247,7 +247,28 @@ select option{background:var(--bg-panel);color:var(--text);padding:6px}
 </div>
 <div id="modalRoot"></div>
 <div id="toastRoot"></div>
+
+<!-- HELP CHATBOT -->
+<div class="chat-fab" id="helpFab" onclick="toggleChat('help')" title="Ask a question" style="position:fixed;width:48px;height:48px;bottom:20px;right:20px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(94,106,210,.4);z-index:1000">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</div>
+<div class="chat-window" id="helpChat" style="position:fixed;bottom:78px;right:20px;width:340px;height:440px;background:var(--bg-panel);border:1px solid var(--border-strong);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:1001;display:none;flex-direction:column;overflow:hidden">
+  <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+    <span style="font-size:18px">💬</span>
+    <div style="flex:1"><div style="font-size:13px;font-weight:500">SmartOps Assistant</div><div style="font-size:10px;color:var(--text-dim)">Ask me anything</div></div>
+    <button onclick="toggleChat('help')" style="border:none;background:transparent;color:var(--text-dim);cursor:pointer;font-size:18px">×</button>
+  </div>
+  <div class="chat-msgs" id="helpMsgs" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px">
+    <div class="chat-msg bot" style="background:rgba(255,255,255,.04);color:var(--text-mid);padding:8px 12px;border-radius:10px;font-size:12px;max-width:85%">Hi! Ask me about SmartOps features, automations, or how to use the dashboard. 👋</div>
+  </div>
+  <div style="padding:10px;border-top:1px solid var(--border);display:flex;gap:6px">
+    <input id="helpInput" placeholder="Type your question..." onkeydown="if(event.key==='Enter')sendHelpMsg()" style="flex:1;padding:8px 10px;font-size:12px;border:1px solid var(--border-strong);border-radius:6px;background:var(--surface);color:var(--text);font-family:inherit;outline:none" />
+    <button onclick="sendHelpMsg()" style="padding:8px 14px;font-size:12px;font-weight:500;border:none;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer">Send</button>
+  </div>
+</div>
+
 <script src="/sof-logo.js"></script>
 <script src="/agency-app.js"></script>
+<script src="/chatbots.js"></script>
 </body>
 </html>
