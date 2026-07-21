@@ -80,7 +80,7 @@ if(params.get('mode')==='signup')toggleMode();
 const plan=params.get('plan');
 if(plan){document.getElementById('planBadge').style.display='block';const pn={starter:'Starter — $97/mo',pro:'Professional — $297/mo',agency:'Agency — $697/mo'};document.getElementById('planName').textContent=pn[plan]||plan;}
 // Stage 3B: check for existing cookie-based session instead of localStorage token
-async function checkSession(){try{const r=await fetch(`${API}/me`,{credentials:'include'});if(r.ok){const d=await r.json();if(d.ok&&d.user){const redirect=params.get('redirect')||'/agency.html';window.location.href=redirect;return true;}}}catch(e){}return false;}
+async function checkSession(){try{const r=await fetch(`${API}/me`,{credentials:'include'});if(r.ok){const d=await r.json();if(d.ok&&d.user){const params=new URLSearchParams(window.location.search);const redirect=params.get('redirect')||'/agency.html';window.location.href=redirect;return true;}}}catch(e){}return false;}
 checkSession();
 // Clean up any stale localStorage tokens from the old auth system
 localStorage.removeItem('sof_token');localStorage.removeItem('sof_user');

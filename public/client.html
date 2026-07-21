@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartOps Foundry — Client Portal</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0b0d;--bg-card:#121316;--bg-elevated:#1a1b1f;
+  --border:rgba(255,255,255,.06);--border-strong:rgba(255,255,255,.1);
+  --text:#f0f1f2;--text-2:#b8bcc4;--text-3:#6b6f76;--text-4:#4a4d54;
+  --accent:#6366f1;--accent-light:#818cf8;--accent-bg:rgba(99,102,241,.1);
+  --emerald:#10b981;--emerald-bg:rgba(16,185,129,.1);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,.1);
+  --rose:#f43f5e;--rose-bg:rgba(244,63,94,.1);
+  --cyan:#06b6d4;--cyan-bg:rgba(6,182,212,.1);
+  --violet:#a78bfa;--violet-bg:rgba(167,139,250,.1);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;min-height:100vh;line-height:1.5}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.12)}
+::selection{background:var(--accent-bg);color:var(--accent-light)}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none}
+input,textarea{font-family:inherit}
+
+/* Top Nav */
+.topnav{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:12px 24px}
+.topnav-left{display:flex;align-items:center;gap:14px}
+.topnav-left .logo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;letter-spacing:-.02em}
+.topnav-left .biz-name{font-size:13px;color:var(--text-3);font-weight:400;margin-left:4px;padding-left:14px;border-left:1px solid var(--border)}
+.topnav-tabs{display:flex;gap:2px}
+.tab-btn{padding:8px 16px;font-size:13px;font-weight:500;color:var(--text-3);background:none;border-radius:6px;transition:all .15s;display:flex;align-items:center;gap:7px}
+.tab-btn:hover{color:var(--text-2);background:rgba(255,255,255,.03)}
+.tab-btn.active{color:var(--accent-light);background:var(--accent-bg)}
+.tab-btn .tab-icon{font-size:15px}
+.topnav-right{display:flex;align-items:center;gap:10px}
+.topnav-right .avatar{width:32px;height:32px;border-radius:8px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.topnav-right .user-name{font-size:12px;font-weight:500}
+.topnav-right .user-plan{font-size:10px;color:var(--text-4)}
+.btn-logout{padding:6px 10px;font-size:11px;color:var(--text-3);background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--border);transition:all .15s}
+.btn-logout:hover{color:var(--rose);border-color:rgba(244,63,94,.2)}
+
+/* Main */
+.main{max-width:1200px;margin:0 auto;padding:28px 24px}
+.tab-panel{display:none;animation:fadeIn .25s ease}
+.tab-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* Cards */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:border-color .15s}
+.card:hover{border-color:var(--border-strong)}
+.card-title{font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+
+/* Stat row */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px}
+.stat .stat-val{font-size:28px;font-weight:600;letter-spacing:-.03em}
+.stat .stat-lbl{font-size:11px;color:var(--text-3);font-weight:500;margin-top:2px}
+.stat .stat-trend{font-size:11px;font-weight:600;margin-top:4px}
+.stat .stat-trend.up{color:var(--emerald)}
+.stat .stat-trend.down{color:var(--rose)}
+.stat .stat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;font-size:16px}
+
+/* Grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+
+/* Chart container */
+.chart-wrap{position:relative;height:240px;margin-top:8px}
+.chart-wrap-sm{position:relative;height:200px;margin-top:8px}
+
+/* Progress bars */
+.progress-item{margin-bottom:14px}
+.progress-item .pi-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.progress-item .pi-label{font-size:12px;font-weight:500;color:var(--text-2)}
+.progress-item .pi-value{font-size:12px;font-weight:600;color:var(--text)}
+.progress-track{height:8px;background:rgba(255,255,255,.04);border-radius:999px;overflow:hidden}
+.progress-fill{height:100%;border-radius:999px;transition:width .6s ease}
+
+/* Lists */
+.item-list{display:flex;flex-direction:column;gap:6px}
+.list-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;transition:all .15s}
+.list-row:hover{background:rgba(255,255,255,.04);border-color:var(--border-strong)}
+.list-row .lr-icon{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.list-row .lr-body{flex:1;min-width:0}
+.list-row .lr-title{font-size:12px;font-weight:500}
+.list-row .lr-sub{font-size:11px;color:var(--text-3)}
+.list-row .lr-tag{padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600}
+.tag-active{background:var(--emerald-bg);color:var(--emerald)}
+.tag-draft{background:var(--amber-bg);color:var(--amber)}
+.tag-pending{background:var(--rose-bg);color:var(--rose)}
+
+/* Mini chatbot per tab */
+.mini-chat{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;height:420px}
+.mini-chat-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.mini-chat-head .mc-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.mini-chat-head h4{font-size:13px;font-weight:600}
+.mini-chat-head p{font-size:10px;color:var(--text-4)}
+.mini-chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
+.mc-msg{max-width:85%;padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.5}
+.mc-msg.bot{background:rgba(255,255,255,.04);color:var(--text-2);align-self:flex-start;border-bottom-left-radius:3px}
+.mc-msg.user{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+.mc-typing{color:var(--text-4);font-style:italic;font-size:12px;align-self:flex-start}
+.mini-chat-input{padding:10px;border-top:1px solid var(--border);display:flex;gap:6px}
+.mini-chat-input input{flex:1;padding:8px 10px;font-size:12px;border:1px solid var(--border-strong);border-radius:6px;background:var(--bg);color:var(--text);outline:none}
+.mini-chat-input input:focus{border-color:var(--accent)}
+.mini-chat-input button{padding:8px 14px;font-size:12px;font-weight:500;border-radius:6px;background:var(--accent);color:#fff}
+.mini-chat-input button:disabled{opacity:.4}
+
+/* Request edit button */
+.btn-edit{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;font-weight:500;border-radius:7px;background:var(--accent-bg);color:var(--accent-light);border:1px solid rgba(99,102,241,.2);transition:all .15s}
+.btn-edit:hover{background:rgba(99,102,241,.2)}
+
+/* Edit modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:200}
+.modal-bg.show{display:flex}
+.modal-box{background:var(--bg-card);border:1px solid var(--border-strong);border-radius:12px;width:100%;max-width:460px;padding:24px;animation:slideUp .2s}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.modal-box h3{font-size:16px;font-weight:600;margin-bottom:6px}
+.modal-box p{font-size:13px;color:var(--text-3);margin-bottom:16px}
+.modal-box textarea{width:100%;min-height:100px;padding:10px;font-size:13px;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg);color:var(--text);resize:vertical;outline:none}
+.modal-box textarea:focus{border-color:var(--accent)}
+.modal-box .modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+.modal-box .btn-send{padding:8px 18px;font-size:13px;font-weight:500;border-radius:7px;background:var(--accent);color:#fff}
+.modal-box .btn-cancel{padding:8px 18px;font-size:13px;font-weight:500;border-radius:7px;background:rgba(255,255,255,.04);color:var(--text-3);border:1px solid var(--border)}
+
+/* Responsive */
+@media(max-width:768px){
+  .topnav{flex-direction:column;gap:10px;padding:10px 14px}
+  .topnav-tabs{overflow-x:auto;width:100%;justify-content:flex-start}
+  .stat-row{grid-template-columns:repeat(2,1fr)}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="topnav-left">
+    <div class="logo" data-sof-logo data-sof-size="22" data-sof-variant="light" data-sof-text="true"></div>
+    <span class="biz-name" id="bizName">Loading...</span>
+  </div>
+  <div class="topnav-tabs" id="tabNav">
+    <button class="tab-btn active" data-tab="leads" onclick="switchTab('leads')"><span class="tab-icon">📡</span> Leads</button>
+    <button class="tab-btn" data-tab="marketing" onclick="switchTab('marketing')"><span class="tab-icon">📊</span> Marketing</button>
+    <button class="tab-btn" data-tab="goals" onclick="switchTab('goals')"><span class="tab-icon">🎯</span> Goals</button>
+    <button class="tab-btn" data-tab="schedule" onclick="switchTab('schedule')"><span class="tab-icon">📅</span> Schedule</button>
+    <button class="tab-btn" data-tab="reports" onclick="switchTab('reports')"><span class="tab-icon">📈</span> Reports</button>
+  </div>
+  <div class="topnav-right">
+    <div>
+      <div class="user-name" id="userName">User</div>
+      <div class="user-plan" id="userPlan">—</div>
+    </div>
+    <div class="avatar" id="userAvatar">U</div>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+  <!-- LEADS TAB -->
+  <div class="tab-panel active" id="panel-leads">
+    <div class="stat-row">
+      <div class="stat"><div class="stat-icon" style="background:var(--accent-bg)">📞</div><div class="stat-val" id="statLeadsTotal">—</div><div class="stat-lbl">Total Leads</div><div class="stat-trend up" id="statLeadsTrend">+12% vs last month</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--emerald-bg)">✓</div><div class="stat-val" id="statLeadsConverted">—</div><div class="stat-lbl">Converted</div><div class="stat-trend up">+8% conversion</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--amber-bg)">⏱</div><div class="stat-val" id="statLeadsResponse">—</div><div class="stat-lbl">Avg Response</div><div class="stat-trend up">-23% faster</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--rose-bg)">↗</div><div class="stat-val" id="statLeadsRecovered">—</div><div class="stat-lbl">Revenue Recovered</div><div class="stat-trend up">+31%</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📈 Leads Captured (Last 8 Weeks)</div>
+        <div class="chart-wrap"><canvas id="chartLeadsBar"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🥧 Lead Sources</div>
+        <div class="chart-wrap"><canvas id="chartLeadsDonut"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🔔 Active Lead Automations</div>
+        <div class="item-list" id="leadsAutomations"></div>
+      </div>
+      <div class="card">
+        <div class="mini-chat" style="height:380px">
+          <div class="mini-chat-head"><div class="mc-icon" style="background:var(--accent-bg);color:var(--accent-light)">💬</div><div><h4>Leads Assistant</h4><p>Ask about lead capture & follow-up</p></div></div>
+          <div class="mini-chat-msgs" id="chatLeads"><div class="mc-msg bot">Hi! I can help you understand your lead automations, conversion rates, and follow-up strategies. What would you like to know?</div></div>
+          <div class="mini-chat-input"><input id="chatLeadsInput" placeholder="Ask about leads..." onkeydown="if(event.key==='Enter')sendTabChat('leads')"><button onclick="sendTabChat('leads')">Send</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARKETING TAB -->
+  <div class="tab-panel" id="panel-marketing">
+    <div class="stat-row">
+      <div class="stat"><div class="stat-icon" style="background:var(--violet-bg)">📣</div><div class="stat-val" id="statMktCampaigns">—</div><div class="stat-lbl">Active Campaigns</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--cyan-bg)">👁</div><div class="stat-val" id="statMktReach">—</div><div class="stat-lbl">Total Reach</div><div class="stat-trend up">+18%</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--emerald-bg)">💬</div><div class="stat-val" id="statMktEngagement">—</div><div class="stat-lbl">Engagement Rate</div><div class="stat-trend up">+4.2%</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--amber-bg)">📰</div><div class="stat-val" id="statMktPosts">—</div><div class="stat-lbl">Posts Published</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📈 Campaign Performance</div>
+        <div class="chart-wrap"><canvas id="chartMktLine"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Channel Breakdown</div>
+        <div class="chart-wrap"><canvas id="chartMktBar"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🎨 Marketing Automations</div>
+        <div class="item-list" id="mktAutomations"></div>
+      </div>
+      <div class="card">
+        <div class="mini-chat" style="height:380px">
+          <div class="mini-chat-head"><div class="mc-icon" style="background:var(--violet-bg);color:var(--violet)">💬</div><div><h4>Marketing Assistant</h4><p>Campaigns, social, content</p></div></div>
+          <div class="mini-chat-msgs" id="chatMarketing"><div class="mc-msg bot">Hello! I can help with marketing campaigns, social media strategy, content calendars, and seasonal promotions. What are you working on?</div></div>
+          <div class="mini-chat-input"><input id="chatMarketingInput" placeholder="Ask about marketing..." onkeydown="if(event.key==='Enter')sendTabChat('marketing')"><button onclick="sendTabChat('marketing')">Send</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GOALS TAB -->
+  <div class="tab-panel" id="panel-goals">
+    <div class="stat-row">
+      <div class="stat"><div class="stat-icon" style="background:var(--emerald-bg)">⭐</div><div class="stat-val" id="statGoalReviews">—</div><div class="stat-lbl">Reviews This Month</div><div class="stat-trend up">+7 new</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--accent-bg)">🤝</div><div class="stat-val" id="statGoalReferrals">—</div><div class="stat-lbl">Referrals Generated</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--amber-bg)">💰</div><div class="stat-val" id="statGoalRevenue">—</div><div class="stat-lbl">Revenue Target</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--cyan-bg)">🔄</div><div class="stat-val" id="statGoalRetention">—</div><div class="stat-lbl">Retention Rate</div><div class="stat-trend up">+5%</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🎯 Goal Progress</div>
+        <div id="goalProgress"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🛡 Reputation Radar</div>
+        <div class="chart-wrap"><canvas id="chartGoalRadar"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🏆 Goal Automations</div>
+        <div class="item-list" id="goalAutomations"></div>
+      </div>
+      <div class="card">
+        <div class="mini-chat" style="height:380px">
+          <div class="mini-chat-head"><div class="mc-icon" style="background:var(--emerald-bg);color:var(--emerald)">💬</div><div><h4>Goals Assistant</h4><p>Reviews, referrals, retention</p></div></div>
+          <div class="mini-chat-msgs" id="chatGoals"><div class="mc-msg bot">Hi! I can help you set and track goals for reviews, referrals, revenue, and customer retention. What goal would you like to discuss?</div></div>
+          <div class="mini-chat-input"><input id="chatGoalsInput" placeholder="Ask about goals..." onkeydown="if(event.key==='Enter')sendTabChat('goals')"><button onclick="sendTabChat('goals')">Send</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHEDULE TAB -->
+  <div class="tab-panel" id="panel-schedule">
+    <div class="stat-row">
+      <div class="stat"><div class="stat-icon" style="background:var(--accent-bg)">📅</div><div class="stat-val" id="statSchedUpcoming">—</div><div class="stat-lbl">Upcoming Appts</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--emerald-bg)">✓</div><div class="stat-val" id="statSchedCompleted">—</div><div class="stat-lbl">Completed (30d)</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--rose-bg)">✗</div><div class="stat-val" id="statSchedNoShow">—</div><div class="stat-lbl">No-Shows (30d)</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--amber-bg)">📉</div><div class="stat-val" id="statSchedRate">—</div><div class="stat-lbl">No-Show Rate</div><div class="stat-trend up">-12%</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📅 Appointments This Week</div>
+        <div class="chart-wrap"><canvas id="chartSchedBar"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔔 Upcoming Reminders</div>
+        <div class="item-list" id="schedUpcoming"></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">⚙️ Scheduling Automations</div>
+        <div class="item-list" id="schedAutomations"></div>
+      </div>
+      <div class="card">
+        <div class="mini-chat" style="height:380px">
+          <div class="mini-chat-head"><div class="mc-icon" style="background:var(--cyan-bg);color:var(--cyan)">💬</div><div><h4>Schedule Assistant</h4><p>Appointments, reminders, no-shows</p></div></div>
+          <div class="mini-chat-msgs" id="chatSchedule"><div class="mc-msg bot">Hello! I can help with appointment scheduling, reminder automation, and no-show recovery strategies. What do you need help with?</div></div>
+          <div class="mini-chat-input"><input id="chatScheduleInput" placeholder="Ask about scheduling..." onkeydown="if(event.key==='Enter')sendTabChat('schedule')"><button onclick="sendTabChat('schedule')">Send</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORTS TAB -->
+  <div class="tab-panel" id="panel-reports">
+    <div class="stat-row">
+      <div class="stat"><div class="stat-icon" style="background:var(--emerald-bg)">💰</div><div class="stat-val" id="statRepRevenue">—</div><div class="stat-lbl">Revenue (30d)</div><div class="stat-trend up">+24%</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--accent-bg)">📥</div><div class="stat-val" id="statRepCaptured">—</div><div class="stat-lbl">Revenue Captured</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--amber-bg)">🔄</div><div class="stat-val" id="statRepRecovered">—</div><div class="stat-lbl">Revenue Recovered</div><div class="stat-trend up">+31%</div></div>
+      <div class="stat"><div class="stat-icon" style="background:var(--cyan-bg)">⚡</div><div class="stat-val" id="statRepAutomations">—</div><div class="stat-lbl">Automations Run</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📈 Revenue Trend (90 Days)</div>
+        <div class="chart-wrap"><canvas id="chartRepLine"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Revenue by Service Type</div>
+        <div class="chart-wrap"><canvas id="chartRepBar"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📋 Recent Activity</div>
+        <div class="item-list" id="repActivity"></div>
+      </div>
+      <div class="card">
+        <div class="mini-chat" style="height:380px">
+          <div class="mini-chat-head"><div class="mc-icon" style="background:var(--amber-bg);color:var(--amber)">💬</div><div><h4>Reports Assistant</h4><p>Revenue, performance, analytics</p></div></div>
+          <div class="mini-chat-msgs" id="chatReports"><div class="mc-msg bot">Hello! I can help you understand your revenue reports, automation performance, and business analytics. What would you like to analyze?</div></div>
+          <div class="mini-chat-input"><input id="chatReportsInput" placeholder="Ask about reports..." onkeydown="if(event.key==='Enter')sendTabChat('reports')"><button onclick="sendTabChat('reports')">Send</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- EDIT REQUEST MODAL -->
+<div class="modal-bg" id="editModal">
+  <div class="modal-box">
+    <h3>Request an Edit</h3>
+    <p>Tell us what you'd like to change and your account manager will handle it.</p>
+    <textarea id="editText" placeholder="e.g. 'Update the seasonal campaign to include a spring discount...'"></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-send" onclick="submitEditRequest()">Send Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- FLOATING REQUEST BUTTON -->
+<button class="btn-edit" style="position:fixed;bottom:20px;left:20px;z-index:100;box-shadow:0 4px 16px rgba(99,102,241,.3)" onclick="openEditModal()">
+  ✏️ Request Edit
+</button>
+
+<script src="/sof-logo.js"></script>
+<script src="/client-app.js"></script>
+<script src="/client-app-part2.js"></script>
+<script>
+// Start the app after all scripts loaded
+init();
+</script>
+</body>
+</html>

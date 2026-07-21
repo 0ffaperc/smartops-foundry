@@ -56,6 +56,7 @@ export async function handleChatRoutes(req, res, url, body) {
   // POST /api/chat/help — public help bot (DeepSeek free)
   if (req.method === 'POST' && path === '/api/chat/help') {
     const userMsg = body?.message || '';
+    const customSystem = body?.system || '';
     if (!userMsg) {
       res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({ ok: false, error: 'Message required' }));
@@ -73,7 +74,7 @@ export async function handleChatRoutes(req, res, url, body) {
         apiKey,
         'deepseek/deepseek-chat-v3.1',
         [
-          { role: 'system', content: HELP_SYSTEM },
+          { role: 'system', content: customSystem || HELP_SYSTEM },
           { role: 'user', content: userMsg },
         ],
         512
