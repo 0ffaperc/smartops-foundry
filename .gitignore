@@ -1,47 +1,26 @@
+# Dependencies
 node_modules/
 dist/
-release/
-.env
-.DS_Store
 
-# Secrets & keys
-friend-secret.txt
-*.pem
-.cloudflared/
+# Brave browser profile (not needed in repo)
+.brave-lifeos-clean-profile/
+
+# Environment
+.env
+orchestrator-server/.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS junk
+.DS_Store
+Thumbs.db
 
 # Logs
 *.log
 server.log
 
-# Agency data (client info, user sessions)
-agency-data/
-
-# Cache & temp
-cache/
-.cache/
-*.tmp
-
-# OS files
-Thumbs.db
-desktop.ini
-
-# Fix scripts (one-time use)
+# Agency data (client-specific, not for repo)
+orchestrator-server/agency-data/
 fix-secret.py
-test-bridge.sh
-
-# Clip builder output
-clip-builder/output/
-clip-builder/clips/
-
-# Trading data
-public/v3data/
-
-# Image cache
-image_cache/
-audio_cache/
-
-# Automation pilot test/local data
-agency-data/
-agency-data-test/
-.env.test
-.env.local

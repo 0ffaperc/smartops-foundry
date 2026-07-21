@@ -1,4 +1,0 @@
-2026/07/16-09:27:11.226 4c38 Reusing MANIFEST C:\Users\shahe\Desktop\lifeos-v2-restored\lifeos-v2-ready\.brave-lifeos-clean-profile\Default\Local Storage\leveldb/MANIFEST-000001
-2026/07/16-09:27:11.233 4c38 Recovering log #7
-2026/07/16-09:27:11.234 4c38 (ignoring error) C:\Users\shahe\Desktop\lifeos-v2-restored\lifeos-v2-ready\.brave-lifeos-clean-profile\Default\Local Storage\leveldb/000007.log: dropping 581 bytes; Corruption: checksum mismatch
-2026/07/16-09:27:11.240 4c38 Reusing old log C:\Users\shahe\Desktop\lifeos-v2-restored\lifeos-v2-ready\.brave-lifeos-clean-profile\Default\Local Storage\leveldb/000007.log 
