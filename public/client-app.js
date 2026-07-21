@@ -1,5 +1,5 @@
 // SmartOps Foundry — Client Portal (sidebar layout, 6 panels)
-const AUTH_API='***';
+const AUTH_API='/api/auth';
 const AGENCY_API='/api/agency';
 let userData=null, clientData=null, activeTab='dashboard';
 const charts={};
@@ -34,25 +34,23 @@ async function init(){
 }
 
 async function loadUser(){
-  // Prevent redirect loops — only redirect to login once
-  if(sessionStorage.getItem('sof_redirecting')) return;
-  try{
-    const r=await fetch(`${AUTH_API}/me`,{credentials:'include'});
-    const d=await r.json();
-    if(d.ok&&d.user){
-      sessionStorage.removeItem('sof_redirecting');
-      userData=d.user;
-      document.getElementById('userName').textContent=d.user.name||d.user.email;
-      document.getElementById('userPlan').textContent=(d.user.plan||'starter')+' plan';
-      document.getElementById('userAvatar').textContent=(d.user.name||'?').charAt(0).toUpperCase();
-    }else{
-      sessionStorage.setItem('sof_redirecting','1');
-      window.location.href='/login.html?redirect=/client.html';
-    }
-  }catch(e){
-    sessionStorage.setItem('sof_redirecting','1');
-    window.location.href='/login.html?redirect=/client.html';
+  // Retry auth check 3 times before redirecting to login (prevents redirect loops on transient failures)
+  for(let attempt=0;attempt<3;attempt++){
+    try{
+      const r=await fetch(`${AUTH_API}/me`,{credentials:'include'});
+      const d=await r.json();
+      if(d.ok&&d.user){
+        userData=d.user;
+        document.getElementById('userName').textContent=d.user.name||d.user.email;
+        document.getElementById('userPlan').textContent=(d.user.plan||'starter')+' plan';
+        document.getElementById('userAvatar').textContent=(d.user.name||'?').charAt(0).toUpperCase();
+        return; // success — stop retrying
+      }
+    }catch(e){ /* network error, retry */ }
+    if(attempt<2) await new Promise(r=>setTimeout(r,500));
   }
+  // All 3 attempts failed — go to login
+  window.location.href='/login.html?redirect=/client.html';
 }
 
 async function loadClientData(){

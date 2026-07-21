@@ -79,9 +79,7 @@ const params=new URLSearchParams(window.location.search);
 if(params.get('mode')==='signup')toggleMode();
 const plan=params.get('plan');
 if(plan){document.getElementById('planBadge').style.display='block';const pn={starter:'Starter — $97/mo',pro:'Professional — $297/mo',agency:'Agency — $697/mo'};document.getElementById('planName').textContent=pn[plan]||plan;}
-// Clear any redirect-loop guard
-sessionStorage.removeItem('sof_redirecting');
-// Stage 3B: check for existing cookie-based session instead of localStorage token
+// Check for existing cookie-based session
 async function checkSession(){try{const r=await fetch(`${API}/me`,{credentials:'include'});if(r.ok){const d=await r.json();if(d.ok&&d.user){const params=new URLSearchParams(window.location.search);const redirect=params.get('redirect');if(redirect){window.location.href=redirect;return true;} // Admin goes to agency, everyone else to client portal
         if(d.user.email==='perc@smartopsfoundry.com'||d.user.role==='admin'){window.location.href='/agency.html';}else{window.location.href='/client.html';}return true;}}}catch(e){}return false;}
 checkSession();
