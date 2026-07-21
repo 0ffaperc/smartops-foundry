@@ -34,16 +34,25 @@ async function init(){
 }
 
 async function loadUser(){
+  // Prevent redirect loops — only redirect to login once
+  if(sessionStorage.getItem('sof_redirecting')) return;
   try{
     const r=await fetch(`${AUTH_API}/me`,{credentials:'include'});
     const d=await r.json();
     if(d.ok&&d.user){
+      sessionStorage.removeItem('sof_redirecting');
       userData=d.user;
       document.getElementById('userName').textContent=d.user.name||d.user.email;
       document.getElementById('userPlan').textContent=(d.user.plan||'starter')+' plan';
       document.getElementById('userAvatar').textContent=(d.user.name||'?').charAt(0).toUpperCase();
-    }else{window.location.href='/login.html?redirect=/client.html';}
-  }catch(e){window.location.href='/login.html?redirect=/client.html';}
+    }else{
+      sessionStorage.setItem('sof_redirecting','1');
+      window.location.href='/login.html?redirect=/client.html';
+    }
+  }catch(e){
+    sessionStorage.setItem('sof_redirecting','1');
+    window.location.href='/login.html?redirect=/client.html';
+  }
 }
 
 async function loadClientData(){
