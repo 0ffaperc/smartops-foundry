@@ -208,12 +208,12 @@ select option{background:var(--bg-panel);color:var(--text);padding:6px}
   <aside class="sidebar">
     <div class="brand" data-sof-logo data-sof-size="30" data-sof-variant="light" data-sof-animated="true" style="color:var(--text);padding-bottom:16px;margin-bottom:12px;border-bottom:1px solid var(--border);">
     </div>
-    <div class="flex items-center gap-2 mb-3">
+    <div class="flex items-center gap-2 mb-3 admin-only">
       <div class="section-label flex-1" style="margin:0;">Clients</div>
       <button class="btn btn-primary btn-sm" onclick="openAddClient()">+ Add</button>
     </div>
     <div class="client-list" id="clientList"></div>
-    <div class="card card-body-sm" style="background:rgba(0,0,0,.15);">
+    <div class="card card-body-sm admin-only" style="background:rgba(0,0,0,.15);">
       <p style="font-size:10px;color:var(--text-dim);font-weight:600;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;">Backend</p>
       <p id="backendStatus" style="font-size:11px;color:var(--emerald);font-weight:500;">● Checking...</p>
     </div>
@@ -225,6 +225,14 @@ select option{background:var(--bg-panel);color:var(--text);padding:6px}
           <p id="userPlan" style="font-size:10px;color:var(--text-dim);text-transform:capitalize;">—</p>
         </div>
         <button onclick="logout()" style="border:none;background:transparent;color:var(--text-dim);cursor:pointer;padding:5px;border-radius:5px;font-size:13px;" title="Sign out">⏻</button>
+      </div>
+    </div>
+    <!-- View Switcher -->
+    <div class="card card-body-sm" style="background:rgba(0,0,0,.15);margin-top:6px;">
+      <p style="font-size:10px;color:var(--text-dim);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">View Mode</p>
+      <div style="display:flex;gap:4px;background:rgba(255,255,255,.03);border-radius:6px;padding:3px;">
+        <button id="viewBtnEditor" onclick="setViewMode('editor')" style="flex:1;padding:6px 10px;border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;border:none;background:var(--accent);color:#fff;transition:all .15s;">✏️ Editor</button>
+        <button id="viewBtnCustomer" onclick="setViewMode('customer')" style="flex:1;padding:6px 10px;border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--text-dim);transition:all .15s;">👤 Customer</button>
       </div>
     </div>
   </aside>

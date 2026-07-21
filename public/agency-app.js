@@ -1,3 +1,40 @@
+// ===== View Mode Switcher (Editor / Customer) =====
+let viewMode = localStorage.getItem('sof_viewMode') || 'editor';
+
+function setViewMode(mode) {
+  viewMode = mode;
+  localStorage.setItem('sof_viewMode', mode);
+  // Update toggle button styles
+  const btnE = document.getElementById('viewBtnEditor');
+  const btnC = document.getElementById('viewBtnCustomer');
+  if (btnE && btnC) {
+    if (mode === 'editor') {
+      btnE.style.background = 'var(--accent)';
+      btnE.style.color = '#fff';
+      btnC.style.background = 'transparent';
+      btnC.style.color = 'var(--text-dim)';
+    } else {
+      btnE.style.background = 'transparent';
+      btnE.style.color = 'var(--text-dim)';
+      btnC.style.background = 'var(--accent)';
+      btnC.style.color = '#fff';
+    }
+  }
+  // Toggle admin-only elements
+  const adminEls = document.querySelectorAll('.admin-only');
+  adminEls.forEach(el => {
+    el.style.display = (mode === 'editor') ? '' : 'none';
+  });
+  // In customer mode, auto-select first client if none selected
+  if (mode === 'customer' && !state.activeClient && state.clients.length > 0) {
+    selectClient(state.clients[0].id);
+  }
+  // Re-render current view
+  if (state.activeClient) {
+    renderClientView();
+  }
+}
+
 // ===== AI Ops Agency — Standalone White-Themed App =====
 // Stage 3B: Auth guard — check cookie-based session via /api/auth/me
 // (no more localStorage sof_token — session is in an HttpOnly cookie)
@@ -106,6 +143,8 @@ async function init() {
   await fetchClients();
   document.getElementById('backendStatus').textContent = '● Online';
   document.getElementById('backendStatus').style.color = 'var(--emerald)';
+  // Initialize view mode toggle
+  setViewMode(viewMode);
 }
 async function fetchClients() {
   const j = await api('/clients');
@@ -147,7 +186,7 @@ function renderClientList() {
         <div class="name">${esc(c.name)}</div>
         <div class="industry">${esc(c.industry)}</div>
       </div>
-      <button class="client-delete" onclick="event.stopPropagation();deleteClient('${c.id}','${esc(c.name)}')" title="Delete">
+      <button class="client-delete admin-only" onclick="event.stopPropagation();deleteClient('${c.id}','${esc(c.name)}')" title="Delete">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
       </button>
     </div>`).join('');
@@ -183,7 +222,7 @@ function renderHeader(p) {
   </div>`;
 }
 function renderTabs(counts) {
-  const tabs = [
+  const allTabs = [
     { id: 'dashboard', label: 'Dashboard', icon: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>' },
     { id: 'testlab', label: 'Test Lab', icon: '<path d="M4 14a1 1 0 0 1-.78 1l-1 .44a1 1 0 0 0 0 1.12l1 .44a1 1 0 0 1 .78 1v.06a1 1 0 0 0 1.67.74l.05-.05a1 1 0 0 1 1.41 0l.05.05a1 1 0 0 0 1.67-.74V18a1 1 0 0 1 .78-1l1-.44a1 1 0 0 0 0-1.12L9.2 15a1 1 0 0 1-.78-1v-.06a1 1 0 0 0-1.67-.74l-.05.05a1 1 0 0 1-1.41 0l-.05-.05A1 1 0 0 0 4 13.94Z"/><path d="M18 2v6"/><path d="M22 8a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V2h8z"/>' },
     { id: 'contacts', label: 'Contacts', icon: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', count: counts.contacts },
@@ -193,6 +232,9 @@ function renderTabs(counts) {
     { id: 'analysis', label: 'Analysis', icon: '<line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/>' },
     { id: 'settings', label: 'Settings', icon: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>' },
   ];
+  // In customer view, hide admin-only tabs
+  const adminTabs = ['research', 'analysis', 'settings', 'testlab'];
+  const tabs = allTabs.filter(t => viewMode !== 'customer' || !adminTabs.includes(t.id));
   return `<div class="tabs">${tabs.map(t => `
     <button class="tab ${state.tab === t.id ? 'active' : ''}" onclick="setTab('${t.id}')">
       <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg>

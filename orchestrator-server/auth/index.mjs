@@ -19,7 +19,7 @@ function getAllowedOrigins() {
   // Environment override or sensible dev defaults
   const env = process.env.CORS_ALLOWED_ORIGINS;
   if (env) return env.split(',').map(s => s.trim()).filter(Boolean);
-  return ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8787', 'http://127.0.0.1:8787'];
+  return ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8787', 'http://127.0.0.1:8787', 'http://localhost:3000', 'http://127.0.0.1:3000', 'https://smartopsfoundry.com', 'https://www.smartopsfoundry.com', 'https://agency.smartopsfoundry.com'];
 }
 
 // ---- Auth data directory ----
