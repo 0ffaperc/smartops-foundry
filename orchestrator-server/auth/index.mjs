@@ -389,12 +389,8 @@ export async function handleAuthRoutes(req, res, url) {
       const h = applyCORS(req, res, { 'Content-Type': 'application/json' });
       res.writeHead(400, h); res.end(JSON.stringify({ ok: false, error: 'Password must be at least 8 characters' })); return true;
     }
-    // Bootstrap gate: only allow public signup if no users exist yet
+    // Public signup is open — no bootstrap gate
     const data = readUsers();
-    if (data.users.length > 0) {
-      const h = applyCORS(req, res, { 'Content-Type': 'application/json' });
-      res.writeHead(403, h); res.end(JSON.stringify({ ok: false, error: 'Account creation is restricted. Contact an administrator.' })); return true;
-    }
     if (data.users.find(u => u.email === normalizedEmail)) {
       const h = applyCORS(req, res, { 'Content-Type': 'application/json' });
       res.writeHead(409, h); res.end(JSON.stringify({ ok: false, error: 'An account with this email already exists' })); return true;
